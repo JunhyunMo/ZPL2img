@@ -1065,8 +1065,8 @@ void CZLabelPreviewSaveDlg::GetClipboardText()
 		}
 		else
 		{ 
-			//AfxMessageBox(L"There is no text (ANSI) data on the Clipboard.");
-			;
+			CString str =L"There is no text (ANSI) data on the Clipboard.";
+			GetLog()->Debug(str.GetBuffer(0));
 		}
 		CloseClipboard();
 	}
@@ -1116,7 +1116,7 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtExec()
 	SetForegroundWindow();
 	TabKey(GetDlgItem(IDC_EXPLORER));
 
-	//오류처리 TO-DO
+	//오류처리
 
 	TabKey(GetDlgItem(IDC_EXPLORER));
 	CtrlV(GetDlgItem(IDC_EXPLORER));
@@ -1146,36 +1146,8 @@ void CZLabelPreviewSaveDlg::ZPL2Img()
 	SetForegroundWindow();
 	TabKey(GetDlgItem(IDC_EXPLORER));
 
-	//오류처리 TO-DO
-//
-	//if(m_strStatusText == HOME_LINK) //2015-09-11 http://192.168.1.120/index.html/
-	//{	
-	//	TabKey(GetDlgItem(IDC_EXPLORER));
-	//	CtrlV(GetDlgItem(IDC_EXPLORER));
-	//}
-	//else
-	//{
-	//	int i = 0;
-	//	while(1)
-	//	{
-	//		//SetForegroundWindow();
-	//		TabKey(GetDlgItem(IDC_EXPLORER));
-	//		Sleep(50);
-	//		if(m_strStatusText == HOME_LINK ) //L"http://192.168.1.120/index.html"
-	//		{
-	//			break;
-	//		}
-	//		i++;
+	//오류처리
 
-	//		if(i>20) {
-	//			GoHome();
-	//			return;
-	//		}
-	//	}
-
-	//	TabKey(GetDlgItem(IDC_EXPLORER));
-	//	CtrlV(GetDlgItem(IDC_EXPLORER));
-	//}
 
 	SetForegroundWindow();
 	TabKey(GetDlgItem(IDC_EXPLORER));
@@ -1213,19 +1185,17 @@ void CZLabelPreviewSaveDlg::NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
 	
 	CString strCurUrl = m_IExplorer.get_LocationURL();
-	//http://192.168.1.120/zpl%20%20%20%20%20%20%20%20%20%20%20%203D30291Fost?dev=R&oname=UNKNOWN&otype=ZPL&pw=&data=
-	//http://192.168.1.120/zpl
-	//
+	
 	SetWindowText(strCurUrl);
 
 	if(strCurUrl.Left(30) == m_strHomeUrl)
 	{
-		//m_nStatus = 0;
-		;
+		m_nStatus = 0;
+		
 	}
 	else if(strCurUrl == m_strEndUrl)
 	{
-		//m_nStatus = 1;
+		m_nStatus = 1;
 		SetTimer(IDD,3000,NULL); //SaveImage...
 	}
 	else if(strCurUrl.Left(30) != m_strHomeUrl && strCurUrl != m_strEndUrl)
@@ -1235,8 +1205,6 @@ void CZLabelPreviewSaveDlg::NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 		////2번시도..
 		//PrepareNewZPL();
 		//SetTimer(IDD+100,1000*10,NULL);
-
-		
 	}
 }
 
@@ -1281,14 +1249,6 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 			return;
 		}
 
-		/*if(m_bDMSconnected == TRUE)
-		{
-			KillTimer(IDD + 1);
-		}
-		else
-		{
-			Connect2DMS(m_strDMS_IP,_wtoi(m_strDMS_Port));
-		}*/
 	}
 	else if(nIDEvent == IDD+100) //ZEBRA printer reboot term - test 要
 	{
@@ -1308,9 +1268,6 @@ void CZLabelPreviewSaveDlg::SaveImage()
 	if(!pDesktopWnd)
 		return;
 	CWindowDC DeskTopDC(pDesktopWnd);
-
-	/*if(!m_Image.Create(m_Rect.right, m_Rect.bottom, 32))
-		return;*/
 
 	if(!m_Image.Create(m_Rect.right, m_Rect.bottom, 32))
 		return;
@@ -1369,6 +1326,7 @@ void CZLabelPreviewSaveDlg::RebootZebraPrinter()
   
 	   //BOM(ByteOrderMask), LE(LittleEndian)
 	   char bom[] = { 0xFF, 0xFE, };
+
 	   bSuccess = WriteFile(hOutputFile, bom, sizeof(bom), &dwWritten, NULL);
 	   TCHAR* t =  _T("~JR"); //Power On Reset
 	   DWORD nNumberOfBytes = sizeof(TCHAR) * _tcslen(t);
@@ -1494,6 +1452,10 @@ void CZLabelPreviewSaveDlg::ProgressChangeExplorer(long Progress, long ProgressM
 			GoHome();
 		}
 	}
+	else if(Progress == 10000 && ProgressMax == 10000) //2015-12-10
+	{
+		
+	}
 	
 }
 
@@ -1513,6 +1475,31 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 		}
 	}
 }
+
+//Preview Label - 웹 브라우저 컨트롤 event / 2012-12-10
+/*
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+ProgressChangeExplorer(long Progress, long ProgressMax) - 10000 / 10000
+ProgressChangeExplorer(long Progress, long ProgressMax) - -1 / 10000
+DownloadCompleteExplorer
+ProgressChangeExplorer(long Progress, long ProgressMax) - 10000 / 10000
+CommandStateChangeExplorer(long Command, BOOL Enable) - -1 / FALSE
+ProgressChangeExplorer(long Progress, long ProgressMax) - 0 / 0
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+StatusTextChangeExplorer(LPCTSTR Text) /완료/
+*/
 
 void CZLabelPreviewSaveDlg::OnBnClickedBtEventClear()
 {

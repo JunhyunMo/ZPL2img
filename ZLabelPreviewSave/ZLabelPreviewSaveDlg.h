@@ -77,12 +77,12 @@ DECLARE_EVENTSINK_MAP()
 	CComboBox m_ctlCbZpl;
 
 public:
-	CString			m_strZPL,m_strPrevZPL;
+	CString	m_strZPL,m_strPrevZPL;
 
 	//int				m_nSeq;
-	void			MBCS2Unicode(LPCSTR lpData,LPWSTR ReturnData);
-	void			Unicode2MBCS(LPWSTR lpData,LPSTR lpRtd);
-	void			ProcessStart();
+	void	MBCS2Unicode(LPCSTR lpData,LPWSTR ReturnData);
+	void	Unicode2MBCS(LPWSTR lpData,LPSTR lpRtd);
+	void	ProcessStart();
 
 
 	int		m_nStatus; //0:home, 1:ZPL preview, 2: SaveEnd
