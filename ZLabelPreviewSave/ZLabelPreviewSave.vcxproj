@@ -44,10 +44,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\bin\</OutDir>
+    <TargetName>ZPL2img</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\bin\</OutDir>
+    <TargetName>ZPL2img</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -133,6 +135,7 @@
     <None Include="res\ZLabelPreviewSave.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\BarCode.ico" />
     <Image Include="res\bitmap1.bmp" />
     <Image Include="res\HITS.bmp" />
     <Image Include="res\HYNIX Label.bmp" />

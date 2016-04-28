@@ -101,5 +101,8 @@
     <Image Include="res\skhynix_seal20.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
+    <Image Include="res\BarCode.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
 </Project>
