@@ -51,7 +51,8 @@ void CConnectSocket::OnReceive(int nErrorCode)
 
 	CZLabelPreviewSaveDlg* pMain = (CZLabelPreviewSaveDlg*)AfxGetMainWnd();
 	
-	if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) > 200) //대충 200
+	//if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) > 200) //대충 200
+	if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) > 30) //2016-07-14 빈 라벨 이미지^XA^LH0,0^FS\r\n^FO0,0^FD ^FS\r\n^XZ
 	{
 		pMain->MBCS2Unicode(szBuffer,szTBuffer);
 		
