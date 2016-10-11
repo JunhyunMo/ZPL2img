@@ -51,14 +51,26 @@ void CConnectSocket::OnReceive(int nErrorCode)
 
 	CZLabelPreviewSaveDlg* pMain = (CZLabelPreviewSaveDlg*)AfxGetMainWnd();
 	
-	if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) > 200) //대충 200
+	//if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) > 200) //대충 200
+	//if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) > 30) //2016-07-14 빈 라벨 이미지^XA^LH0,0^FS\r\n^FO0,0^FD ^FS\r\n^XZ
+	if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) >= 5) //2016-10-10 "RESET" packet 처리
 	{
 		pMain->MBCS2Unicode(szBuffer,szTBuffer);
 		
 		strRcv.Format(_T("%s"),szTBuffer);	
+
+		//2016-10-10
+		if(strRcv == L"RESET") //프로그램종료
+		{
+			ExitProcess(0);
+			return;
+		}
+		//
+
 		strLog.Format(_T("[RCV]%s"),strRcv);
 		GetLog()->Debug(strLog.GetBuffer());
 		pMain->AddLogSocket(strLog);
+
 
 		int nIdx = strRcv.Find(L"^XA"); 
 		if( nIdx >= 0) //

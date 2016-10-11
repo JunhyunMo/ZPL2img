@@ -949,6 +949,16 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
+
+	//중복실행 방지 - 2016-10-11
+	HANDLE hEvent;
+    hEvent = CreateEvent(NULL, FALSE, TRUE, AfxGetAppName());
+    if ( GetLastError() == ERROR_ALREADY_EXISTS)
+    {
+        PostQuitMessage(WM_QUIT);
+    }
+	//
+
 	if(!ReadConfigFile())
 	{
 		MessageBox(L"ZPL2img.INI 설정파일 오류!",L"Error",MB_OK|MB_ICONERROR);
