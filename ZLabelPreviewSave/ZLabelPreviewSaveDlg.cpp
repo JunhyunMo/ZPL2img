@@ -965,6 +965,8 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 		PostQuitMessage(0);
 	}
 
+	SetWindowText(L"ZPL2img"); //2016-10-11 for App Monitoring
+
 	MoveWindow(0,0,1280,1024);
 
 	SetDlgItemText(IDC_DMS_IPADDR,m_strDMS_IP);
