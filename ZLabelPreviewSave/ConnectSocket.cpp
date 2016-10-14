@@ -59,6 +59,10 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		
 		strRcv.Format(_T("%s"),szTBuffer);	
 
+		strLog.Format(_T("[RCV]%s"),strRcv);
+		GetLog()->Debug(strLog.GetBuffer());
+		pMain->AddLogSocket(strLog);
+
 		//2016-10-10
 		if(strRcv == L"RESET") //프로그램종료
 		{
@@ -66,11 +70,6 @@ void CConnectSocket::OnReceive(int nErrorCode)
 			return;
 		}
 		//
-
-		strLog.Format(_T("[RCV]%s"),strRcv);
-		GetLog()->Debug(strLog.GetBuffer());
-		pMain->AddLogSocket(strLog);
-
 
 		int nIdx = strRcv.Find(L"^XA"); 
 		if( nIdx >= 0) //

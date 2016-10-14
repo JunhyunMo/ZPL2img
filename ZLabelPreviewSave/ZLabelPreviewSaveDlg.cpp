@@ -857,6 +857,12 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	, m_strZPL(_T(""))
 	, m_strSuccessCnt(_T(""))
 {
+//2016-10-12 ClassName µî·Ï
+	WNDCLASS wc;
+	GetClassInfo(AfxGetInstanceHandle(), _T("#32770"), &wc);
+	wc.lpszClassName = _T("ZPL2img");
+	AfxRegisterClass(&wc);
+//
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	//m_strHomeUrl = _T("http://192.168.1.120/zpl%20%20"); //%20%20%20%20%20%20%20%20%20FA8C470Dost?dev=R&oname=UNKNOWN&otype=ZPL&pw=&data=");
@@ -1267,7 +1273,8 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 		KillTimer(IDD+100);
 		PrepareNewZPL();
 	}
-	
+
+
 	CDialogEx::OnTimer(nIDEvent);
 }
 

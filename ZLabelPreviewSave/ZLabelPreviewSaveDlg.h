@@ -127,6 +127,7 @@ public:
 
 	BOOL	m_bDMSconnected;
 	afx_msg void OnBnClickedBtReboot();
+
 };
 
 
