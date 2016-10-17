@@ -10,6 +10,7 @@
 
 CConnectSocket::CConnectSocket()
 {
+	m_strRcvZPL = L"";
 }
 
 CConnectSocket::~CConnectSocket()
@@ -59,6 +60,11 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		
 		strRcv.Format(_T("%s"),szTBuffer);	
 
+		if(strRcv != L"RESET") //2016-10-17
+		{
+			m_strRcvZPL = strRcv;
+		}
+
 		strLog.Format(_T("[RCV]%s"),strRcv);
 		GetLog()->Debug(strLog.GetBuffer());
 		pMain->AddLogSocket(strLog);
@@ -66,6 +72,9 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		//2016-10-10
 		if(strRcv == L"RESET") //프로그램종료
 		{
+			strLog.Format(_T("[RESET]%s"),m_strRcvZPL); //2016-10-17 이미지생성 안되는 ZPL 추적용도
+			GetLog()->Debug(strLog.GetBuffer());
+			
 			ExitProcess(0);
 			return;
 		}
