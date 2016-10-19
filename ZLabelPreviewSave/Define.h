@@ -16,5 +16,6 @@
 //±×³É...Program Readability 
 #define NETWORK				_T("NETWORK")
 #define ZEBRA_IP			_T("ZEBRA_IP")
+#define ZEBRA_PORT			_T("ZEBRA_PORT")
 #define DMS_IP				_T("DMS_IP")
 #define DMS_PORT			_T("DMS_PORT")

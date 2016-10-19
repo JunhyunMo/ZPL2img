@@ -21,7 +21,7 @@ CConnectSocket::~CConnectSocket()
 void CConnectSocket::OnClose(int nErrorCode)
 {
 	((CZLabelPreviewSaveDlg*)AfxGetMainWnd())->Disconnect2DMS();
-	AfxGetMainWnd()->SetTimer(IDD_ZLABELPREVIEWSAVE_DIALOG + 1, 1000 * 5, NULL); //DMS 접속
+	AfxGetMainWnd()->SetTimer(IDD_ZLABELPREVIEWSAVE_DIALOG+1, 1000*5, NULL); //DMS 접속
 }
 
 void CConnectSocket::OnReceive(int nErrorCode)
@@ -58,27 +58,25 @@ void CConnectSocket::OnReceive(int nErrorCode)
 	{
 		pMain->MBCS2Unicode(szBuffer,szTBuffer);
 		
-		strRcv.Format(_T("%s"),szTBuffer);	
+		//2016-10-21 정리
+		strRcv.Format(_T("%s"),szTBuffer);		
+		pMain->LogRcvDMS(strRcv);
+		strLog.Format(L"[RCV-DMS] %s", szTBuffer);
+		pMain->AddLogSocket(strLog);
 
 		if(strRcv != L"RESET") //2016-10-17
 		{
 			m_strRcvZPL = strRcv;
 		}
-
-		strLog.Format(_T("[RCV]%s"),strRcv);
-		GetLog()->Debug(strLog.GetBuffer());
-		pMain->AddLogSocket(strLog);
-
-		//2016-10-10
-		if(strRcv == L"RESET") //프로그램종료
+		else if(strRcv == L"RESET")
 		{
-			strLog.Format(_T("[RESET]%s"),m_strRcvZPL); //2016-10-17 이미지생성 안되는 ZPL 추적용도
-			GetLog()->Debug(strLog.GetBuffer());
-			
-			ExitProcess(0);
+			pMain->Reset(m_strRcvZPL);
 			return;
 		}
-		//
+		/*strLog.Format(_T("[RCV]%s"),strRcv);
+		GetLog()->Debug(strLog.GetBuffer());
+		pMain->AddLogSocket(strLog);*/
+
 
 		int nIdx = strRcv.Find(L"^XA"); 
 		if( nIdx >= 0) //
@@ -92,7 +90,6 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		}
 		else if( nIdx == -1) //^XA 없으면...
 		{
-			
 			::ZeroMemory(szBuffer, sizeof(szBuffer));
 			strcpy_s(szBuffer,"RETRY");
 
@@ -101,14 +98,16 @@ void CConnectSocket::OnReceive(int nErrorCode)
 
 			if(pMain->m_Socket.Send((LPVOID)szBuffer, strlen(szBuffer) + 1) == TRUE)
 			{
-				strLog.Format(L"[SND}%s",szTBuffer);
-				GetLog()->Debug(strLog.GetBuffer());
+				strLog.Format(L"[SND-DMS] %s", szTBuffer);
+				//GetLog()->Debug(strLog.GetBuffer());
+				pMain->LogSend2DMS(szTBuffer);
 				pMain->AddLogSocket(strLog);
 			}
 			else
 			{
-				strLog.Format(L"ERROR-[SND}%s",szTBuffer);
-				GetLog()->Debug(strLog.GetBuffer());
+				strLog.Format(L"[ERROR][SND-DMS] - %s", szTBuffer);
+				//GetLog()->Debug(strLog.GetBuffer());
+				pMain->LogSend2DMS(szTBuffer);
 				pMain->AddLogSocket(strLog);
 			}
 			pMain->PrepareNewZPL(); //2015-10-04 RETRY시 TAB order 초기화-테스트 要
@@ -116,4 +115,65 @@ void CConnectSocket::OnReceive(int nErrorCode)
 	}
 
 	CSocket::OnReceive(nErrorCode);
+}
+
+
+
+
+
+// CConnectSocket2 - ZEBRA
+
+CConnectSocket2::CConnectSocket2()
+{
+}
+
+CConnectSocket2::~CConnectSocket2()
+{
+}
+
+// CConnectSocket member functions
+void CConnectSocket2::OnClose(int nErrorCode)
+{
+	((CZLabelPreviewSaveDlg*)AfxGetMainWnd())->Disconnect2ZEBRA();
+}
+
+void CConnectSocket2::OnReceive(int nErrorCode)
+{
+	int nRead = 0;
+	CString strLog;
+
+	CHAR chBuff[1024];
+	::ZeroMemory(chBuff, sizeof(chBuff));
+
+	TCHAR Buff[1024*2];
+	::ZeroMemory(Buff, sizeof(Buff));
+	CZLabelPreviewSaveDlg* pMain = (CZLabelPreviewSaveDlg*)AfxGetMainWnd();
+
+	nRead = Receive((BYTE*)chBuff, sizeof(chBuff));
+
+	//if(nRead != SOCKET_ERROR)
+	if(nRead >= 0)
+	{
+		if(strlen(chBuff) > 0) 
+		{
+			pMain->MBCS2Unicode(chBuff,Buff);
+			pMain->ParseResponse(Buff);
+			strLog.Format(_T("[RCV] %s"),Buff);
+			pMain->AddLogSocket(strLog);
+		}
+		//pMain->TcpIpDisconn();
+		//pMain->AddLog(L"Diconnect");
+		//pMain->GetDlgItem(IDC_BT_TCPIP_CONN)->EnableWindow(TRUE);
+	}
+	else
+	{
+		/*pMain->TcpIpDisconn();
+		pMain->AddLog(L"Diconnect");
+		pMain->GetDlgItem(IDC_BT_TCPIP_CONN)->EnableWindow(TRUE);*/
+	}
+	//pMain->SetTimer(IDD_ZPL_SNDRCV_DIALOG,1000,NULL);
+	
+	CSocket::OnReceive(nErrorCode);
+	
+
 }

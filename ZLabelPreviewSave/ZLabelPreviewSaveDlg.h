@@ -101,33 +101,54 @@ public:
 //
 	void ZPL2Img();
 //
-	void AddLogEvent(CString str);
-	void AddLogSocket(CString str);
+// http
+	void ConnectZEBRA(); // http connect
+	void AddLogEvent(CString str); //WEB Browser
 
 	BOOL ReadConfigFile(); // \\ZPL2img.INI
 	CString GetExecuteDirectory();
 	
-	CString m_strZEBRA_IP, m_strDMS_IP, m_strDMS_Port;
+	CString m_strZEBRA_IP, m_strZEBRA_Port, m_strDMS_IP, m_strDMS_Port;
 	CListBox m_ctlListEvent;
 
 	void TitleChangeExplorer(LPCTSTR Text);
 	void ProgressChangeExplorer(long Progress, long ProgressMax);
 	void StatusTextChangeExplorer(LPCTSTR Text);
 
-	void ConnectZEBRA();
-//2015-10-18
-	CConnectSocket	m_Socket;
+	
+// TCP/IP
 	CListBox m_ctlListSocket;
 
-	void	 Connect2DMS(CString stIP,UINT nPort);
-	void	 Disconnect2DMS();
-	
-	void SocketSend(CString strSendPacket);
 	CString  m_strFileName;
 
 	BOOL	m_bDMSconnected;
 	afx_msg void OnBnClickedBtReboot();
 
+	void AddLogSocket(CString str);
+
+	//2016-10-20 DMS 통신
+	CConnectSocket	m_Socket;
+
+	void	Connect2DMS(CString stIP,UINT nPort);
+	void	Disconnect2DMS();
+	void	SocketSend(CString strSendPacket);
+	void	Reset(CString strZPL); 
+	void	RecordExitTime();
+	void	LogRcvDMS(CString str);
+	void	LogSend2DMS(CString str);
+	
+	//2016-10-21 ZEBRA 상태체크용
+	CConnectSocket2	m_Socket2;
+
+	BOOL	Connect2ZEBRA(CString strZebraIP, UINT nPort);
+	void	Disconnect2ZEBRA();
+	void	SocketSend2(CString strSendPacket);
+	int		SendToZEBRA(CString strZPL);
+	void	ParseResponse(TCHAR* tch);
+	void	LogRcvZEBRA(CString str);
+	void	LogSend2ZEBRA(CString str);
+
+	afx_msg void OnBnClickedBtZebraStatus();
 };
 
 

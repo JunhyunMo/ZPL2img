@@ -71,7 +71,8 @@ inline Log* GetLog()
 
 inline LPCWSTR Log::GetLogFileName(LPWSTR buffer, size_t size, LPCWSTR logName)
 {
-	_snwprintf(buffer, size, _T("./TCP_LOG/%s.txt"), logName);
+	//_snwprintf(buffer, size, _T("./TCP_LOG/%s.txt"), logName);
+	_snwprintf(buffer, size, _T("./LOG/%s.txt"), logName);
 	return buffer;
 }
 
@@ -129,7 +130,8 @@ inline void Log::InitDebugLog()
 {
 	WCHAR buffer[MAX_PATH];
 	m_pDebugLog->SetLogFileCsv(
-		GetLog()->GetLogFileName(buffer, MAX_PATH, _T("log_debug")),
+		//GetLog()->GetLogFileName(buffer, MAX_PATH, _T("log_debug")),
+		GetLog()->GetLogFileName(buffer, MAX_PATH, _T("log_ZPL2img")),
 		LOGFILE_PER_DAY, 
 		LOG_SIZE, 
 		LOG_EVERY_TIME);
