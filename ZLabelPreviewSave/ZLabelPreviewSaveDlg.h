@@ -72,7 +72,6 @@ DECLARE_EVENTSINK_MAP()
 	CImage	  m_Image;
 	CRect	  m_Rect;
 
-	CString	  m_strSuccessCnt;
 	CEdit     m_strFailCnt;
 	CComboBox m_ctlCbZpl;
 
@@ -95,7 +94,6 @@ public:
 	void	CtrlV(CWnd* pWnd);
 	void	EnterKey(CWnd* pWnd);
 	void	PrepareNewZPL();
-	void	RebootZebraPrinter();
 
 	void NotifyNext();
 //
@@ -118,11 +116,8 @@ public:
 	
 // TCP/IP
 	CListBox m_ctlListSocket;
-
 	CString  m_strFileName;
-
-	BOOL	m_bDMSconnected;
-	afx_msg void OnBnClickedBtReboot();
+	BOOL	 m_bDMSconnected;
 
 	void AddLogSocket(CString str);
 
@@ -131,8 +126,9 @@ public:
 
 	void	Connect2DMS(CString stIP,UINT nPort);
 	void	Disconnect2DMS();
-	void	SocketSend(CString strSendPacket);
-	void	Reset(CString strZPL); 
+	//void	SocketSend(CString strSendPacket);
+	int		SendToDMS(CString strSendPacket);
+	void	ResetByDMS(CString strZPL); 
 	void	RecordExitTime();
 	void	LogRcvDMS(CString str);
 	void	LogSend2DMS(CString str);
@@ -142,13 +138,22 @@ public:
 
 	BOOL	Connect2ZEBRA(CString strZebraIP, UINT nPort);
 	void	Disconnect2ZEBRA();
-	void	SocketSend2(CString strSendPacket);
+	int		SocketSend2(CString strSendPacket);
 	int		SendToZEBRA(CString strZPL);
-	void	ParseResponse(TCHAR* tch);
+	//void	ParseResponse(TCHAR* tch);
+	void	ParseZEBRAResponse(TCHAR* tch); //2016-10-21 ~HS command response parsing
 	void	LogRcvZEBRA(CString str);
 	void	LogSend2ZEBRA(CString str);
 
 	afx_msg void OnBnClickedBtZebraStatus();
+	afx_msg void OnBnClickedBtZebraStatusStop();
+
+	void	RebootZebra(); //ZEBRA 재실행
+	//2016-10-25
+	int		m_nStatusCheckTerm;
+	int		m_nImgInMemoryLimit;
+	void    RecordZebraRebooting(int nRecoveryOn); //1: 재부팅,복구완료, 0: 재부팅진행중
+
 };
 
 

@@ -70,7 +70,7 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		}
 		else if(strRcv == L"RESET")
 		{
-			pMain->Reset(m_strRcvZPL);
+			pMain->ResetByDMS(m_strRcvZPL);
 			return;
 		}
 		/*strLog.Format(_T("[RCV]%s"),strRcv);
@@ -157,9 +157,10 @@ void CConnectSocket2::OnReceive(int nErrorCode)
 		if(strlen(chBuff) > 0) 
 		{
 			pMain->MBCS2Unicode(chBuff,Buff);
-			pMain->ParseResponse(Buff);
-			strLog.Format(_T("[RCV] %s"),Buff);
+			strLog.Format(_T("[RCV-ZEBRA] %s"),Buff);
 			pMain->AddLogSocket(strLog);
+			pMain->ParseZEBRAResponse(Buff);
+			
 		}
 		//pMain->TcpIpDisconn();
 		//pMain->AddLog(L"Diconnect");
@@ -174,6 +175,5 @@ void CConnectSocket2::OnReceive(int nErrorCode)
 	//pMain->SetTimer(IDD_ZPL_SNDRCV_DIALOG,1000,NULL);
 	
 	CSocket::OnReceive(nErrorCode);
-	
 
 }
