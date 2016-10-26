@@ -26,16 +26,6 @@ void CConnectSocket::OnClose(int nErrorCode)
 
 void CConnectSocket::OnReceive(int nErrorCode)
 {
-	/*TCHAR szBuffer[1024];
-	::ZeroMemory(szBuffer, sizeof(szBuffer));
-
-	if(Receive(szBuffer, sizeof(szBuffer)) > 0)
-	{
-		CZLabelPreviewSaveDlg* pMain = (CZLabelPreviewSaveDlg*)AfxGetMainWnd();
-		pMain->m_ctlListSocket.AddString(szBuffer);
-		pMain->m_ctlListSocket.SetCurSel(pMain->m_ctlListSocket.GetCount() -1);
-	}*/
-
 	CString strTmp = _T(""), strIP = _T("");
 	UINT nPort = 0;
 	
@@ -52,8 +42,6 @@ void CConnectSocket::OnReceive(int nErrorCode)
 
 	CZLabelPreviewSaveDlg* pMain = (CZLabelPreviewSaveDlg*)AfxGetMainWnd();
 	
-	//if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) > 200) //대충 200
-	//if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) > 30) //2016-07-14 빈 라벨 이미지^XA^LH0,0^FS\r\n^FO0,0^FD ^FS\r\n^XZ
 	if(Receive((BYTE*)szBuffer, sizeof(szBuffer)) >= 5) //2016-10-10 "RESET" packet 처리
 	{
 		pMain->MBCS2Unicode(szBuffer,szTBuffer);
@@ -84,7 +72,8 @@ void CConnectSocket::OnReceive(int nErrorCode)
 			pMain->m_strZPL = strRcv;
 			//Focus	
 			pMain->SetForegroundWindow();
-			pMain->GetDlgItem(IDC_EXPLORER)->SetFocus();
+			//pMain->GetDlgItem(IDC_EXPLORER)->SetFocus();
+			pMain->SetFocusOnWebCtrl(); //2016-10-26
 			//
 			pMain->ProcessStart();
 		}
@@ -162,18 +151,7 @@ void CConnectSocket2::OnReceive(int nErrorCode)
 			pMain->ParseZEBRAResponse(Buff);
 			
 		}
-		//pMain->TcpIpDisconn();
-		//pMain->AddLog(L"Diconnect");
-		//pMain->GetDlgItem(IDC_BT_TCPIP_CONN)->EnableWindow(TRUE);
 	}
-	else
-	{
-		/*pMain->TcpIpDisconn();
-		pMain->AddLog(L"Diconnect");
-		pMain->GetDlgItem(IDC_BT_TCPIP_CONN)->EnableWindow(TRUE);*/
-	}
-	//pMain->SetTimer(IDD_ZPL_SNDRCV_DIALOG,1000,NULL);
 	
 	CSocket::OnReceive(nErrorCode);
-
 }

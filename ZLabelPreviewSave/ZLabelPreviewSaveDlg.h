@@ -48,9 +48,7 @@ DECLARE_MESSAGE_MAP()
 	afx_msg void OnBnClickedBtExit();
 	afx_msg void OnBnClickedBtConnect();
 	afx_msg void OnBnClickedBtDisconnect();
-	afx_msg void OnBnClickedBtReset();
 	afx_msg void OnCbnCloseupCbZpl();
-	afx_msg void OnBnClickedBtSocketSend();
 	afx_msg void OnCbnCloseupCbZebraIp();
 
 public:
@@ -149,11 +147,18 @@ public:
 	afx_msg void OnBnClickedBtZebraStatusStop();
 
 	void	RebootZebra(); //ZEBRA 재실행
-	//2016-10-25
+	
+	//2016-10-25     
 	int		m_nStatusCheckTerm;
 	int		m_nImgInMemoryLimit;
-	void    RecordZebraRebooting(int nRecoveryOn); //1: 재부팅,복구완료, 0: 재부팅진행중
-
+	void    RecordZebraRecovery(BOOL bRecoveryEnd); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
+	void	StartMonitoringZEBRA();
+	void	StopMoniteringZEBRA();
+	//2016-10-26 
+	void	ShowDefaultPage();
+	void	SetFocusOnWebCtrl();
+	void	ProcessRestart();
+	afx_msg void OnBnClickedBtEmergency();
 };
 
 

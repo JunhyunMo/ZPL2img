@@ -909,15 +909,14 @@ BEGIN_MESSAGE_MAP(CZLabelPreviewSaveDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BT_EXEC, &CZLabelPreviewSaveDlg::OnBnClickedBtExec)
 	ON_BN_CLICKED(IDC_BT_NEW, &CZLabelPreviewSaveDlg::OnBnClickedBtNew)
 	ON_WM_TIMER()
-	ON_BN_CLICKED(IDC_BT_RESET, &CZLabelPreviewSaveDlg::OnBnClickedBtReset)
 	ON_CBN_CLOSEUP(IDC_CB_ZPL, &CZLabelPreviewSaveDlg::OnCbnCloseupCbZpl)
 	ON_BN_CLICKED(IDC_BT_EVENT_CLEAR, &CZLabelPreviewSaveDlg::OnBnClickedBtEventClear)
 	ON_BN_CLICKED(IDC_BT_EXIT, &CZLabelPreviewSaveDlg::OnBnClickedBtExit)
 	ON_BN_CLICKED(IDC_BT_CONNECT, &CZLabelPreviewSaveDlg::OnBnClickedBtConnect)
 	ON_BN_CLICKED(IDC_BT_DISCONNECT, &CZLabelPreviewSaveDlg::OnBnClickedBtDisconnect)
-	ON_BN_CLICKED(IDC_BT_SOCKET_SEND, &CZLabelPreviewSaveDlg::OnBnClickedBtSocketSend)
 	ON_BN_CLICKED(IDC_BT_ZEBRA_STATUS, &CZLabelPreviewSaveDlg::OnBnClickedBtZebraStatus)
 	ON_BN_CLICKED(IDC_BT_ZEBRA_STATUS_STOP, &CZLabelPreviewSaveDlg::OnBnClickedBtZebraStatusStop)
+	ON_BN_CLICKED(IDC_BT_EMERGENCY, &CZLabelPreviewSaveDlg::OnBnClickedBtEmergency)
 END_MESSAGE_MAP()
 
 BEGIN_EVENTSINK_MAP(CZLabelPreviewSaveDlg, CDialogEx)
@@ -977,12 +976,14 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 		PostQuitMessage(0);
 	}
 
-	SetWindowText(L"ZPL2img"); //2016-10-11 for App Monitoring
+	StartMonitoringZEBRA();
 
 	MoveWindow(0,0,1280,1024);
 
 	SetDlgItemText(IDC_DMS_IPADDR,m_strDMS_IP);
 	SetDlgItemText(IDC_EDIT_DMS_PORT,m_strDMS_Port);
+
+	SetDlgItemInt(IDC_EDIT_IMG_LIMIT,m_nImgInMemoryLimit); //2016-10-26
 
 	m_ctlCbZpl.SetCurSel(0);
 
@@ -1004,7 +1005,8 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 	GetDlgItem(IDC_BT_ZEBRA_STATUS)->EnableWindow(FALSE);*/
 
 //
-	RecordZebraRebooting(1);
+	RecordZebraRecovery(TRUE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
+	StartMonitoringZEBRA();
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -1130,33 +1132,38 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtExec()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 
-	UpdateData(FALSE); //
-	
+	//UpdateData(FALSE); //
+	//
+	//if(m_strZPL.GetLength() <= 0)
+	//	return;
+	//
+	//SetClipboardText(m_strZPL);
+
+	////for(int i = 0; i < 3; i++) {
+	////	GetDlgItem(IDC_EXPLORER)->SetFocus();//Set Focus
+	////	Sleep(10);
+	////}
+	//SetFocusOnWebCtrl();
+
+	//GetClipboardText();
+
+	//SetForegroundWindow();
+	//TabKey(GetDlgItem(IDC_EXPLORER));
+
+	////오류처리
+	//SetForegroundWindow();
+	//TabKey(GetDlgItem(IDC_EXPLORER));
+	//CtrlV(GetDlgItem(IDC_EXPLORER));
+
+	//SetForegroundWindow();
+	//TabKey(GetDlgItem(IDC_EXPLORER));
+
+	//SetForegroundWindow();
+	//EnterKey(GetDlgItem(IDC_EXPLORER));
 	if(m_strZPL.GetLength() <= 0)
 		return;
-	
-	SetClipboardText(m_strZPL);
 
-	for(int i = 0; i < 3; i++) {
-		GetDlgItem(IDC_EXPLORER)->SetFocus();//Set Focus
-		Sleep(10);
-	}
-
-	GetClipboardText();
-
-	SetForegroundWindow();
-	TabKey(GetDlgItem(IDC_EXPLORER));
-
-	//오류처리
-
-	TabKey(GetDlgItem(IDC_EXPLORER));
-	CtrlV(GetDlgItem(IDC_EXPLORER));
-
-	//SetForegroundWindow();
-	TabKey(GetDlgItem(IDC_EXPLORER));
-
-	//SetForegroundWindow();
-	EnterKey(GetDlgItem(IDC_EXPLORER));
+	ProcessStart();
 	
 }
 
@@ -1167,18 +1174,16 @@ void CZLabelPreviewSaveDlg::ZPL2Img()
 
 	SetClipboardText(m_strZPL);
 
-	for(int i = 0; i < 3; i++) {
-		GetDlgItem(IDC_EXPLORER)->SetFocus();//Set Focus
-		Sleep(10);
-	}
-
+	//for(int i = 0; i < 3; i++) {
+	//	GetDlgItem(IDC_EXPLORER)->SetFocus();//Set Focus
+	//	Sleep(10);
+	//}
+	SetFocusOnWebCtrl(); //2016-10-26
+	
 	GetClipboardText();
 
 	SetForegroundWindow();
 	TabKey(GetDlgItem(IDC_EXPLORER));
-
-	//오류처리
-
 
 	SetForegroundWindow();
 	TabKey(GetDlgItem(IDC_EXPLORER));
@@ -1200,6 +1205,7 @@ void CZLabelPreviewSaveDlg::PrepareNewZPL()
 void CZLabelPreviewSaveDlg::OnBnClickedBtNew()
 {
 	PrepareNewZPL();
+	SetFocusOnWebCtrl();
 }
 
 void CZLabelPreviewSaveDlg::DownloadCompleteExplorer()
@@ -1249,7 +1255,7 @@ CString CZLabelPreviewSaveDlg::GetCurTime()
 	return strEAPformat;
 }
 
-#include "WinSpool.h"
+//#include "WinSpool.h"
 
 void CZLabelPreviewSaveDlg::RebootZebra()
 {
@@ -1285,18 +1291,6 @@ void CZLabelPreviewSaveDlg::RebootZebra()
 	////
 	//   ShellExecute(NULL, _T("print"), _T("Reset.txt"), NULL, NULL, SW_HIDE);
 	//}
-}
-
-void CZLabelPreviewSaveDlg::OnBnClickedBtReset()
-{
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	/*RebootZebraPrinter();
-	m_bOnReboot = TRUE;
-	SetTimer(IDD+100,1000*10,NULL);*/
-	CString strUrl;
-	//strUrl = L"D:\\HITS\\default.html";
-	strUrl.Format(L"%s\\default.html",GetExecuteDirectory());
-	m_IExplorer.Navigate(strUrl,NULL,NULL,NULL,NULL);
 }
 
 void CZLabelPreviewSaveDlg::OnCbnCloseupCbZpl()
@@ -1400,7 +1394,7 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtEventClear()
 	{
 	   m_ctlListEvent.DeleteString(i);
 	}
-	//m_IExplorer.Quit();
+	SetFocusOnWebCtrl();
 }
 void CZLabelPreviewSaveDlg::ConnectZEBRA() // http
 {
@@ -1425,6 +1419,13 @@ void CZLabelPreviewSaveDlg::ProcessStart()
 	m_strPrevZPL = m_strZPL;
 
 	m_strZPL.Replace(L"\\",L"\\\\");
+	UpdateData(FALSE); //
+
+	ZPL2Img();
+}
+
+void CZLabelPreviewSaveDlg::ProcessRestart()
+{
 	UpdateData(FALSE); //
 
 	ZPL2Img();
@@ -1688,12 +1689,14 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtConnect()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	Connect2DMS(m_strDMS_IP,_wtoi(m_strDMS_Port));
+	SetFocusOnWebCtrl();
 }
 
 void CZLabelPreviewSaveDlg::OnBnClickedBtDisconnect()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	Disconnect2DMS();
+	SetFocusOnWebCtrl();
 }
 
 void CZLabelPreviewSaveDlg::AddLogSocket(CString str)
@@ -1761,14 +1764,6 @@ void CZLabelPreviewSaveDlg::Disconnect2DMS()
 	m_bDMSconnected = FALSE;
 }
 
-
-void CZLabelPreviewSaveDlg::OnBnClickedBtSocketSend()
-{
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-//for test
-	//SocketSend(L"NEXT");
-}
-
 //void CZLabelPreviewSaveDlg::SocketSend(CString strSendPacket)
 int CZLabelPreviewSaveDlg::SendToDMS(CString strSendPacket)
 {
@@ -1829,7 +1824,7 @@ void CZLabelPreviewSaveDlg::LogSend2DMS(CString str)
 	GetLog()->Debug(strLog.GetBuffer());
 }
 
-void CZLabelPreviewSaveDlg::RecordZebraRebooting(int nRecoveryOn) //1: 재부팅,복구완료, 0: 재부팅진행중
+void CZLabelPreviewSaveDlg::RecordZebraRecovery(BOOL bRecoveryEnd) //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 {
 	TCHAR szCurrentPath[1024];
 	GetCurrentDirectory(1024, szCurrentPath);
@@ -1849,12 +1844,12 @@ void CZLabelPreviewSaveDlg::RecordZebraRebooting(int nRecoveryOn) //1: 재부팅,복
 	CString strTime;
 	strTime.Format( _T("%04d-%02d-%02d %02d:%02d:%02d"),
 			st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-	if(nRecoveryOn == 1)
+	if(bRecoveryEnd == TRUE)
 	{
 		WritePrivateProfileString(L"ZEBRA",L"REBOOTING_TIME",strTime,strPath);
 		WritePrivateProfileString(L"ZEBRA",L"IN_REBOOTING",L"0",strPath);
 	}
-	else if(nRecoveryOn == 0)
+	else
 	{
 		WritePrivateProfileString(L"ZEBRA",L"IN_REBOOTING",L"1",strPath);
 	}
@@ -1957,10 +1952,6 @@ int CZLabelPreviewSaveDlg::SocketSend2(CString strSendPacket)
 
 		strLog.Format(_T("[SND-ZEBRA][ERROR] %s - ErrCode: %d"), strSendPacket, nError);
 		AddLogSocket(strLog);
-		
-		////2015-07-24 재접속
-		//OnBnClickedBtDisconnect();
-		//OnBnClickedBtConnect();
 	}
 	else
 	{
@@ -2061,7 +2052,7 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 		{
 			Disconnect2DMS();
 			SendToZEBRA(L"~JR");
-			RecordZebraRebooting(0); //1: 재부팅 완료, 0: 재부팅중
+			RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 			RecordExitTime();
 			PostMessage(WM_QUIT);  //프로그램 종료
 		}
@@ -2069,21 +2060,61 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 	}
 }
 
+void CZLabelPreviewSaveDlg::StartMonitoringZEBRA()
+{
+	int nElapse = m_nStatusCheckTerm * 1000;
+	SetTimer(IDD+1000,nElapse,NULL);
+	GetDlgItem(IDC_BT_ZEBRA_STATUS)->EnableWindow(FALSE);;
+}
+
+void CZLabelPreviewSaveDlg::StopMoniteringZEBRA()
+{
+	KillTimer(IDD+1000);
+	GetDlgItem(IDC_BT_ZEBRA_STATUS)->EnableWindow(TRUE);
+}
+
 void CZLabelPreviewSaveDlg::OnBnClickedBtZebraStatus()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	int nElapse = m_nStatusCheckTerm * 1000;
-	SetTimer(IDD+1000,nElapse,NULL);
-	GetDlgItem(IDC_BT_ZEBRA_STATUS)->EnableWindow(FALSE);
-
+	StartMonitoringZEBRA();
+	SetFocusOnWebCtrl();
 }
 void CZLabelPreviewSaveDlg::OnBnClickedBtZebraStatusStop()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	KillTimer(IDD+1000);
-	GetDlgItem(IDC_BT_ZEBRA_STATUS)->EnableWindow(TRUE);
+	StopMoniteringZEBRA();
+	SetFocusOnWebCtrl();
+}
 
-	//m_bThreadOn = FALSE;
+//2016-10-26 prototype code 정리
+void CZLabelPreviewSaveDlg::ShowDefaultPage()
+{
+	CString strUrl;
+	strUrl.Format(L"%s\\default.html",GetExecuteDirectory());
+	m_IExplorer.Navigate(strUrl,NULL,NULL,NULL,NULL);
+}
+
+void CZLabelPreviewSaveDlg::OnBnClickedBtEmergency() // 2016-10-26 테스트 要
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	if(m_strZPL.GetLength() <= 0) //
+	{
+		SendToDMS(L"RETRY");
+		SetFocusOnWebCtrl();
+	}
+	else
+	{
+		ProcessRestart();
+	}
+}
+
+void CZLabelPreviewSaveDlg::SetFocusOnWebCtrl()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	for(int i = 0; i < 3; i++) {
+		GetDlgItem(IDC_EXPLORER)->SetFocus();
+		Sleep(10);
+	}
 }
 
 /*MFC 시간차 구하기
@@ -2098,6 +2129,3 @@ str.Format(L"%d초가 지났습니다.",elapseTime.GetTotalSeconds();
 
 AfxMessageBox(str);
 */
-
-
-
