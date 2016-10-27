@@ -61,18 +61,13 @@ void CConnectSocket::OnReceive(int nErrorCode)
 			pMain->ResetByDMS(m_strRcvZPL);
 			return;
 		}
-		/*strLog.Format(_T("[RCV]%s"),strRcv);
-		GetLog()->Debug(strLog.GetBuffer());
-		pMain->AddLogSocket(strLog);*/
 
 
 		int nIdx = strRcv.Find(L"^XA"); 
 		if( nIdx >= 0) //
 		{
 			pMain->m_strZPL = strRcv;
-			//Focus	
-			pMain->SetForegroundWindow();
-			//pMain->GetDlgItem(IDC_EXPLORER)->SetFocus();
+		
 			pMain->SetFocusOnWebCtrl(); //2016-10-26
 			//
 			pMain->ProcessStart();
@@ -88,14 +83,12 @@ void CConnectSocket::OnReceive(int nErrorCode)
 			if(pMain->m_Socket.Send((LPVOID)szBuffer, strlen(szBuffer) + 1) == TRUE)
 			{
 				strLog.Format(L"[SND-DMS] %s", szTBuffer);
-				//GetLog()->Debug(strLog.GetBuffer());
 				pMain->LogSend2DMS(szTBuffer);
 				pMain->AddLogSocket(strLog);
 			}
 			else
 			{
 				strLog.Format(L"[ERROR][SND-DMS] - %s", szTBuffer);
-				//GetLog()->Debug(strLog.GetBuffer());
 				pMain->LogSend2DMS(szTBuffer);
 				pMain->AddLogSocket(strLog);
 			}

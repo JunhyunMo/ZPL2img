@@ -67,7 +67,7 @@ DECLARE_EVENTSINK_MAP()
 	CString	  m_strHomeUrl;
 	CString   m_strEndUrl;
 
-	CImage	  m_Image;
+	CImage	  m_Image; //atlimage.h
 	CRect	  m_Rect;
 
 	CEdit     m_strFailCnt;
@@ -111,7 +111,6 @@ public:
 	void ProgressChangeExplorer(long Progress, long ProgressMax);
 	void StatusTextChangeExplorer(LPCTSTR Text);
 
-	
 // TCP/IP
 	CListBox m_ctlListSocket;
 	CString  m_strFileName;
@@ -157,8 +156,10 @@ public:
 	//2016-10-26 
 	void	ShowDefaultPage();
 	void	SetFocusOnWebCtrl();
-	void	ProcessRestart();
 	afx_msg void OnBnClickedBtEmergency();
+	//2016-10-27
+	BOOL	m_bPauseMonitoringZEBRA;
+	CString GetMessageForHResult(HRESULT hr);
 };
 
 
