@@ -54,8 +54,8 @@ DECLARE_MESSAGE_MAP()
 public:
 	CExplorer m_IExplorer;
 DECLARE_EVENTSINK_MAP()
-	void DownloadCompleteExplorer();
-	void NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT* URL);
+	void	DownloadCompleteExplorer();
+	void	NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT* URL);
 	
 	void	  GoHome(void);
 	void	  SetClipboardText(CString &szData);
@@ -144,8 +144,6 @@ public:
 
 	afx_msg void OnBnClickedBtZebraStatus();
 	afx_msg void OnBnClickedBtZebraStatusStop();
-
-	void	RebootZebra(); //ZEBRA Àç½ÇÇà
 	
 	//2016-10-25     
 	int		m_nStatusCheckTerm;
@@ -160,6 +158,11 @@ public:
 	//2016-10-27
 	BOOL	m_bPauseMonitoringZEBRA;
 	CString GetMessageForHResult(HRESULT hr);
+	//2016-10-28
+	CWnd*	m_pWndWebCtrl;
+	CWnd*	m_pCurWnd;
+
+	afx_msg void OnBnClickedBtConfig();
 };
 
 
