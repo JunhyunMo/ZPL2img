@@ -67,7 +67,7 @@ DECLARE_EVENTSINK_MAP()
 	CString	  m_strHomeUrl;
 	CString   m_strEndUrl;
 
-	CImage	  m_Image; //atlimage.h
+	CImage	  m_Image; //<atlimage.h>
 	CRect	  m_Rect;
 
 	CEdit     m_strFailCnt;
@@ -76,27 +76,21 @@ DECLARE_EVENTSINK_MAP()
 public:
 	CString	m_strZPL,m_strPrevZPL;
 
-	//int				m_nSeq;
 	void	MBCS2Unicode(LPCSTR lpData,LPWSTR ReturnData);
 	void	Unicode2MBCS(LPWSTR lpData,LPSTR lpRtd);
 	void	ProcessStart();
-
 
 	int		m_nStatus; //0:home, 1:ZPL preview, 2: SaveEnd
 	CString	m_strTitle, m_strStatusText;
 	long	m_nProgress, m_nProgressMax;
 
-	BOOL	m_bOnReboot;
-
 	void	TabKey(CWnd* pWnd);
 	void	CtrlV(CWnd* pWnd);
 	void	EnterKey(CWnd* pWnd);
 	void	PrepareNewZPL();
-
-	void NotifyNext();
 //
 	void ZPL2Img();
-//
+
 // http
 	void ConnectZEBRA(); // http connect
 	void AddLogEvent(CString str); //WEB Browser
@@ -118,12 +112,11 @@ public:
 
 	void AddLogSocket(CString str);
 
-	//2016-10-20 DMS 통신
+	//DMS 통신
 	CConnectSocket	m_Socket;
 
 	void	Connect2DMS(CString stIP,UINT nPort);
 	void	Disconnect2DMS();
-	//void	SocketSend(CString strSendPacket);
 	int		SendToDMS(CString strSendPacket);
 	void	ResetByDMS(CString strZPL); 
 	void	RecordExitTime();
@@ -158,9 +151,6 @@ public:
 	//2016-10-27
 	BOOL	m_bPauseMonitoringZEBRA;
 	CString GetMessageForHResult(HRESULT hr);
-	//2016-10-28
-	CWnd*	m_pWndWebCtrl;
-	CWnd*	m_pCurWnd;
 
 	afx_msg void OnBnClickedBtConfig();
 };

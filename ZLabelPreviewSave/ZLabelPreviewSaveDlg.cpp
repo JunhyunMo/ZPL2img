@@ -868,14 +868,11 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	//m_strEndUrl = _T("http://192.168.1.120/zpl");
 
 	//status
-	//m_nSeq = 0;
 	m_nStatus = -1;
 	m_strTitle = L"";
 	m_strStatusText = L"";
 	m_nProgress = -1; 
 	m_nProgressMax = -1;
-
-	m_bOnReboot = FALSE;
 
 	m_strDMS_IP = L"";
 	m_strDMS_Port = L"";
@@ -1009,11 +1006,7 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 
 	RecordZebraRecovery(TRUE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 	StartMonitoringZEBRA();
-
-	//2016-10-28 TO-DO
-	m_pWndWebCtrl = GetDlgItem(IDC_EXPLORER);
-	//m_pWndWebCtrl->GetDlgCtrlID(); //1000
-
+	
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -1097,9 +1090,6 @@ void CZLabelPreviewSaveDlg::GetClipboardText()
 		if (::IsClipboardFormatAvailable(CF_TEXT) || ::IsClipboardFormatAvailable(CF_OEMTEXT))
 		{
 			HANDLE hClipboardData = GetClipboardData(CF_UNICODETEXT);
-			/*LPCTSTR pchData = (LPCTSTR)GlobalLock(hClipboardData);	 
-			CString strFromClipboard = pchData;*/
-		
 			GlobalUnlock(hClipboardData);
 		}
 		else
@@ -1148,7 +1138,7 @@ void CZLabelPreviewSaveDlg::ZPL2Img()
 {
 	if(m_strZPL.GetLength() <= 0)
 	{
-		CString strLog = L"[ERROR]void CZLabelPreviewSaveDlg::ZPL2Img() - m_strZPL.GetLength() <= 0"; //2016-11-01 TO CHECK
+		CString strLog = L"[ERROR]void CZLabelPreviewSaveDlg::ZPL2Img() - m_strZPL.GetLength() <= 0"; //2016-11-01 
 		GetLog()->Debug(strLog.GetBuffer());
 		return;
 	}
@@ -1156,45 +1146,22 @@ void CZLabelPreviewSaveDlg::ZPL2Img()
 	CString strLog;
 	SetClipboardText(m_strZPL);
 
-	//for(int i = 0; i < 3; i++) {
-	//	GetDlgItem(IDC_EXPLORER)->SetFocus();//Set Focus
-	//	Sleep(10);
-	//}
-//TO-DO Focus Check	 
 	SetFocusOnWebCtrl(); //2016-10-26
 
-	m_pCurWnd = NULL;
-	m_pCurWnd = GetFocus(); //
-strLog.Format(L"[FOCUS CHECK - 1] %d GetFocus()",m_pCurWnd->GetDlgCtrlID() );
-GetLog()->Debug(strLog.GetBuffer());
-//	
 	GetClipboardText();
 
 	SetForegroundWindow();
-    m_pCurWnd = GetFocus();
-strLog.Format(L"[FOCUS CHECK - 2] %d GetFocus()",m_pCurWnd->GetDlgCtrlID() );
-GetLog()->Debug(strLog.GetBuffer());
-
 	TabKey(GetDlgItem(IDC_EXPLORER));
-strLog.Format(L"ZPL2img() - 1 Title : %s / Status : %s / Progress %d / ProgrssMax %d",m_strTitle,m_strStatusText, m_nProgress, m_nProgressMax);
-GetLog()->Debug(strLog.GetBuffer());
-	
+
 	SetForegroundWindow();
 	TabKey(GetDlgItem(IDC_EXPLORER));
 	CtrlV(GetDlgItem(IDC_EXPLORER));
-strLog.Format(L"ZPL2img() - 2 Title : %s / Status : %s / Progress %d / ProgrssMax %d",m_strTitle,m_strStatusText, m_nProgress, m_nProgressMax);
-GetLog()->Debug(strLog.GetBuffer());
 	
 	SetForegroundWindow();
 	TabKey(GetDlgItem(IDC_EXPLORER));
-strLog.Format(L"ZPL2img() - 3 Title : %s / Status : %s / Progress %d / ProgrssMax %d",m_strTitle,m_strStatusText, m_nProgress, m_nProgressMax);
-GetLog()->Debug(strLog.GetBuffer());
 
 	SetForegroundWindow();
 	EnterKey(GetDlgItem(IDC_EXPLORER));
-strLog.Format(L"ZPL2img() - 4 Title : %s / Status : %s / Progress %d / ProgrssMax %d",m_strTitle,m_strStatusText, m_nProgress, m_nProgressMax);
-GetLog()->Debug(strLog.GetBuffer());
-	
 }
 
 void CZLabelPreviewSaveDlg::PrepareNewZPL()
@@ -1212,7 +1179,7 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtNew()
 void CZLabelPreviewSaveDlg::DownloadCompleteExplorer()
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
-	//AfxMessageBox(_T("DownloadCompleteExplorer"));
+	;
 }
 
 //#define HOME_URL L"http://192.168.1.120/zpl%20%20%20%20%20%20%20%20%20%20%20FA8C470Dost?dev=R&oname=UNKNOWN&otype=ZPL&pw=&data="
@@ -1229,7 +1196,6 @@ void CZLabelPreviewSaveDlg::NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 	if(strCurUrl.Left(30) == m_strHomeUrl)
 	{
 		m_nStatus = 0;
-		
 	}
 	else if(strCurUrl == m_strEndUrl)
 	{
@@ -1239,10 +1205,6 @@ void CZLabelPreviewSaveDlg::NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 	else if(strCurUrl.Left(30) != m_strHomeUrl && strCurUrl != m_strEndUrl)
 	{
 		m_nStatus = -1;
-//2015-10-19 막음
-		////2번시도..
-		//PrepareNewZPL();
-		//SetTimer(IDD+100,1000*10,NULL);
 	}
 }
 
@@ -1252,7 +1214,7 @@ CString CZLabelPreviewSaveDlg::GetCurTime()
 	CTime t = CTime::GetCurrentTime();
 	CString strTime = L"";
 	strTime.Format(L"%04d%02d%02d%02d%02d%02d",  t.GetYear(), t.GetMonth(), t.GetDay(), t.GetHour(),  t.GetMinute(), t.GetSecond());  
-	CString strEAPformat = strTime.Mid(2); //YYMMDDHHSS
+	CString strEAPformat = strTime.Mid(2); //YYMMDDHHSS - SKhynix Module Inline (2014~) - EAP 최용진(?) 과장 때 저렇게 그냥 맞춰줌.
 	return strEAPformat;
 }
 
@@ -1374,8 +1336,6 @@ void CZLabelPreviewSaveDlg::ConnectZEBRA() // http
 	m_strEndUrl += _T("/printer/zpl"); //2015-12-02 external print server
 
 	GoHome();
-	//m_IExplorer.Navigate(m_strHomeUrl,NULL,NULL,NULL,NULL);
-
 }
 
 void CZLabelPreviewSaveDlg::ProcessStart()
@@ -1422,11 +1382,7 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 	if( m_strTitle.Left(7) != OK_L7 && m_strTitle.Right(15) != OK_R15 && m_strTitle.Right(13) != OK_R13)
 	{
 		m_nStatus = -100; //Page err
-		//old code
-		/*GoHome(); 
-		m_strZPL = m_strPrevZPL;
-
-		SetTimer(IDD+2,3000,NULL);*/
+		
 		//2016-10-21 
 		strLog.Format(L"[ERROR]TitleChangeExplorer - %s",Text);
 		GetLog()->Debug(strLog.GetBuffer());
@@ -1435,19 +1391,6 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 		RecordExitTime();
 		PostMessage(WM_QUIT);  //프로그램 종료
 	}
-	//old code 
-	//if(m_strTitle.Right(15) == OK_R15)
-	//{
-	//	/*m_bOnReboot = FALSE;
-	//	strLog.Format(L"TitleChangeExplorer - %s",Text);
-	//	GetLog()->Debug(strLog.GetBuffer());
-	//	AddLogEvent(Text);*/
-	//}
-	//if(m_strTitle == ERR01 || m_strTitle == ERR02 || m_strTitle == ERR03)
-	//{
-	//	PrepareNewZPL(); //1번하고, 또...//2번시도..
-	//	SetTimer(IDD+100,1000*10,NULL); //PrepareNewZPL
-	//}
 }
 
 void CZLabelPreviewSaveDlg::ProgressChangeExplorer(long Progress, long ProgressMax)
@@ -1472,10 +1415,7 @@ void CZLabelPreviewSaveDlg::ProgressChangeExplorer(long Progress, long ProgressM
 		}
 		else if(m_strTitle.Right(24) == NG_R24)
 		{
-			//2015-09-13 TO-DO
-			//ShiftTabKey(GetDlgItem(IDC_EXPLORER));
-
-			//GoHome();
+			;
 		}
 	}
 	else if(Progress == 10000 && ProgressMax == 10000) //2015-12-10
@@ -1498,7 +1438,7 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 		AddLogEvent(Text);
 		//
 
-		if(m_bOnReboot == FALSE && m_nStatus != 0)
+		if(m_nStatus != 0)
 		{
 			//2번시도..
 			PrepareNewZPL();
@@ -1534,22 +1474,6 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 			Connect2DMS(m_strDMS_IP,_wtoi(m_strDMS_Port));
 		}
 	}
-	//old code
-	/*else if(nIDEvent == IDD + 2)
-	{
-		CString strCurUrl = m_IExplorer.get_LocationURL();
-		if(strCurUrl.Left(30) == m_strHomeUrl)
-		{
-			KillTimer(IDD+2);
-			OnBnClickedBtExec();
-		}
-		else
-		{
-			GoHome();
-			return;
-		}
-
-	}*/
 	else if(nIDEvent == IDD+100) //
 	{
 		KillTimer(IDD+100);
@@ -1576,7 +1500,8 @@ void CZLabelPreviewSaveDlg::SaveImage()
 		return;
 	CWindowDC DeskTopDC(pDesktopWnd);
 
-	if(!m_Image.Create(m_Rect.right, m_Rect.bottom, 32))
+	//<atlimage.h>
+	if(!m_Image.Create(m_Rect.right, m_Rect.bottom, 32)) 
 		return;
 	
 	hDC = m_Image.GetDC();     
@@ -1624,12 +1549,6 @@ void CZLabelPreviewSaveDlg::Unicode2MBCS(LPWSTR lpData,LPSTR lpRtd)
 	memset(lpRtd,0x00,wcslen(lpData)*2+1);
 	WideCharToMultiByte(949,0,lpData,-1,lpRtd,wcslen(lpData)*2,NULL,NULL);
 	return;
-}
-
-void CZLabelPreviewSaveDlg::NotifyNext()
-{
-	//SocketSend(L"NEXT");
-	;
 }
 
 void CZLabelPreviewSaveDlg::OnBnClickedBtConnect()
@@ -1719,8 +1638,6 @@ int CZLabelPreviewSaveDlg::SendToDMS(CString strSendPacket)
 	memset(chSendPacket,0x00,sizeof(chSendPacket));
 	
 	CString strLog;
-
-	//m_nStatus = 1000;
 
 	Unicode2MBCS(strSendPacket.GetBuffer(0),chSendPacket);
 	int nError = m_Socket.Send((LPVOID)chSendPacket,strlen(chSendPacket)+1);
@@ -1857,9 +1774,9 @@ BOOL CZLabelPreviewSaveDlg::Connect2ZEBRA(CString strZebraIP, UINT nPort) // TCP
 	}
 	else
 	{
-		CString strLog = _T("ZEBRA connected.");
+		/*CString strLog = _T("ZEBRA connected.");
 		GetLog()->Debug(strLog.GetBuffer());
-		AddLogSocket(strLog);	
+		AddLogSocket(strLog);*/	
 
 		return TRUE;
 	}
@@ -1871,9 +1788,9 @@ void CZLabelPreviewSaveDlg::Disconnect2ZEBRA()
 	m_Socket2.Close();
 	m_Socket2.CancelBlockingCall();
 
-	CString strLog = _T("ZEBRA Disconnected.");
+	/*CString strLog = _T("ZEBRA Disconnected.");
 	GetLog()->Debug(strLog.GetBuffer());
-	AddLogSocket(strLog);
+	AddLogSocket(strLog);*/
 	
 }
 
@@ -1883,8 +1800,6 @@ int CZLabelPreviewSaveDlg::SocketSend2(CString strSendPacket)
 	memset(chSendPacket,0x00,sizeof(chSendPacket));
 	
 	CString strLog;
-
-	//m_nStatus = 1000;
 
 	Unicode2MBCS(strSendPacket.GetBuffer(0),chSendPacket);
 	int nError = m_Socket2.Send((LPVOID)chSendPacket,strlen(chSendPacket)+1);
@@ -1970,13 +1885,18 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 				  strPrintMode, strNumOfImgInMemory);
 	GetLog()->Debug(strLog.GetBuffer());
 	//화면표시
-	strLog.Format(L"PaperOut:%s\r\n"
-				  L"Pause:%s\r\n"
-				  L"HeadUp:%s/RibbonOut:%s\r\n"
-				  L"ThermalTrans:%s/PrintMode:%s\r\n"
+	CTime t = CTime::GetCurrentTime();
+	CString strTime = L"";
+	strTime.Format(L"%04d-%02d-%02d %02d:%02d:%02d",  t.GetYear(), t.GetMonth(), t.GetDay(), t.GetHour(),  t.GetMinute(), t.GetSecond());  
+
+	strLog.Format(L"[%s]\r\n"
+				  L"PaperOut:%s/ Pause:%s\r\n"
+				  L"HeadUp:%s/ RibbonOut:%s\r\n"
+				  L"ThermalTrans:%s/ PrintMode:%s\r\n"
 			      L"NumOfImgInMemory:%s", 
-				  strPaperOut, strPauseFlag, strHeadUp,  strRibbonOut,strThermalTransMode, 
-				  strPrintMode, strNumOfImgInMemory);
+				  strTime,
+				  strPaperOut, strPauseFlag, strHeadUp, strRibbonOut,
+				  strThermalTransMode, strPrintMode, strNumOfImgInMemory);
 	SetDlgItemText(IDC_EDIT_ZEBRA,strLog);
 	//
 	Disconnect2ZEBRA();
@@ -2061,10 +1981,6 @@ void CZLabelPreviewSaveDlg::SetFocusOnWebCtrl()
 		GetDlgItem(IDC_EXPLORER)->SetFocus();
 		Sleep(10);
 	}
-/////////////////////////////////////
-	/*CWnd* pWnd = NULL;
-
-	if( pWnd->  =GetDlgItem(IDC_EXPLORER)->SetFocus();*/
 }
 
 CString CZLabelPreviewSaveDlg::GetMessageForHResult(HRESULT hr)
