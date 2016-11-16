@@ -153,6 +153,9 @@ public:
 	CString GetMessageForHResult(HRESULT hr);
 
 	afx_msg void OnBnClickedBtConfig();
+
+	//2017-01-08
+	BOOL	CheckZPL(CString str);
 };
 
 

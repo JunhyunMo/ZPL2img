@@ -968,14 +968,14 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
     hEvent = CreateEvent(NULL, FALSE, TRUE, AfxGetAppName());
     if ( GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        PostQuitMessage(WM_QUIT);
+		PostMessage(WM_QUIT);
     }
 	//
 
 	if(!ReadConfigFile())
 	{
 		MessageBox(L"ZPL2img.INI 설정파일 오류!",L"Error",MB_OK|MB_ICONERROR);
-		PostQuitMessage(0);
+		PostMessage(WM_QUIT);
 	}
 
 	StartMonitoringZEBRA();
@@ -1134,11 +1134,36 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtExec()
 	ProcessStart();
 }
 
+//2017-01-08
+BOOL CZLabelPreviewSaveDlg::CheckZPL(CString strZPL)
+{
+	int nIdx = -1;
+	int nIdx2 = -1;
+
+	nIdx = strZPL.Find(L"^XA");
+	nIdx2 = strZPL.Find(L"^XZ");
+
+	if(nIdx < 0 || nIdx2 < 0)
+	{
+		return FALSE;
+	}
+	else
+		return TRUE;
+}
+
 void CZLabelPreviewSaveDlg::ZPL2Img()
 {
 	if(m_strZPL.GetLength() <= 0)
 	{
-		CString strLog = L"[ERROR]void CZLabelPreviewSaveDlg::ZPL2Img() - m_strZPL.GetLength() <= 0"; //2016-11-01 
+		CString strLog = L"[ERROR] m_strZPL.GetLength() <= 0"; //2016-11-01 
+		GetLog()->Debug(strLog.GetBuffer());
+		return;
+	}
+
+	if(CheckZPL(m_strZPL) == FALSE) //2017-01-08
+	{
+		CString strLog;
+		strLog.Format(L"[ERROR] CheckZPL(...) == FALSE\r\n[m_strZPL]%s",m_strZPL); 
 		GetLog()->Debug(strLog.GetBuffer());
 		return;
 	}
@@ -1389,7 +1414,7 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 		AddLogEvent(Text);
 		//
 		RecordExitTime();
-		PostMessage(WM_QUIT);  //프로그램 종료
+		PostMessage(WM_QUIT);  //프로그램 종료   
 	}
 }
 
@@ -2012,16 +2037,3 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtConfig()
 		PostMessage(WM_QUIT);
 	}
 }
-
-/*MFC 시간차 구하기
-CTime start = CTime::GetCurrentTime();
-Sleep(1000);
-CTime end = CTime::GetCurrentTime();
-
-CTimeSpan elapseTime = end - start;
-
-CString str;
-str.Format(L"%d초가 지났습니다.",elapseTime.GetTotalSeconds();
-
-AfxMessageBox(str);
-*/
