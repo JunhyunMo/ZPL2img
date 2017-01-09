@@ -1191,7 +1191,9 @@ void CZLabelPreviewSaveDlg::ZPL2Img()
 
 void CZLabelPreviewSaveDlg::PrepareNewZPL()
 {
-	SetDlgItemText(IDC_EDIT_ZPL,L"");
+	//SetDlgItemText(IDC_EDIT_ZPL,L"");
+	m_strZPL = L"";
+	UpdateData(FALSE); //2017-01-09
 	GoHome();
 }
 
@@ -1371,6 +1373,10 @@ void CZLabelPreviewSaveDlg::ProcessStart()
 	UpdateData(FALSE); //
 
 	ZPL2Img();
+
+	//2017-01-09 - 미생성시 재요청
+	int nElapse = m_nStatusCheckTerm * 1000;
+	SetTimer(IDD+1111,nElapse,NULL);
 }
 
 //Preview Label - 웹 브라우저 컨트롤 event / 2015-12-10
@@ -1509,6 +1515,14 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 		if(m_bPauseMonitoringZEBRA == FALSE)
 		{
 			SendToZEBRA(L"~HS"); 
+		}
+	}
+	else if(nIDEvent == IDD + 1111) //2017-01-09
+	{
+		KillTimer(IDD+1111);
+		if(m_strPrevZPL == m_strZPL)
+		{
+			OnBnClickedBtEmergency();
 		}
 	}
 	
@@ -1994,6 +2008,7 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtEmergency() // 2016-10-26
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	//Make It Simple!
+	PrepareNewZPL(); //2017-01-09
 	SendToDMS(L"RETRY");
 	SetFocusOnWebCtrl();
 }

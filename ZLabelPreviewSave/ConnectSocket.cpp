@@ -63,16 +63,17 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		}
 
 
-		int nIdx = strRcv.Find(L"^XA"); 
-		if( nIdx >= 0) //
+		int nIdx = m_strRcvZPL.Find(L"^XA"); 
+		int nIdx2 = m_strRcvZPL.Find(L"^XZ");
+		if( nIdx >= 0 && nIdx2 > 0 ) // 2017-01-09
 		{
-			pMain->m_strZPL = strRcv;
+			pMain->m_strZPL = m_strRcvZPL;
 		
 			pMain->SetFocusOnWebCtrl(); //2016-10-26
 			//
 			pMain->ProcessStart();
 		}
-		else if( nIdx == -1) //^XA 없으면...
+		else if( nIdx == -1 || nIdx2 == -1) //^XA or ^XZ없으면...2017-01-09
 		{
 			::ZeroMemory(szBuffer, sizeof(szBuffer));
 			strcpy_s(szBuffer,"RETRY");
@@ -100,11 +101,7 @@ void CConnectSocket::OnReceive(int nErrorCode)
 }
 
 
-
-
-
 // CConnectSocket2 - ZEBRA
-
 CConnectSocket2::CConnectSocket2()
 {
 }
