@@ -156,6 +156,10 @@ public:
 
 	//2017-01-08
 	BOOL	CheckZPL(CString str);
+
+	void    TimeSync(CString str);
+
+	afx_msg void OnBnClickedBtTimesync();
 };
 
 

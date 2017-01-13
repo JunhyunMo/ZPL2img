@@ -52,13 +52,18 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		strLog.Format(L"[RCV-DMS] %s", szTBuffer);
 		pMain->AddLogSocket(strLog);
 
-		if(strRcv != L"RESET") //2016-10-17
+		if(strRcv != L"RESET" && strRcv.Left(4) != L"TIME" ) //2016-10-17
 		{
 			m_strRcvZPL = strRcv;
 		}
 		else if(strRcv == L"RESET")
 		{
 			pMain->ResetByDMS(m_strRcvZPL);
+			return;
+		}
+		else if(strRcv.Left(4) == L"TIME")
+		{
+			pMain->TimeSync(strRcv.Mid(8));
 			return;
 		}
 
