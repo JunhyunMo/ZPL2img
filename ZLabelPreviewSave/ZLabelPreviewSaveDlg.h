@@ -56,6 +56,9 @@ public:
 DECLARE_EVENTSINK_MAP()
 	void	DownloadCompleteExplorer();
 	void	NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT* URL);
+	void	TitleChangeExplorer(LPCTSTR Text);
+	void	ProgressChangeExplorer(long Progress, long ProgressMax);
+	void	StatusTextChangeExplorer(LPCTSTR Text);
 	
 	void	  GoHome(void);
 	void	  SetClipboardText(CString &szData);
@@ -101,16 +104,14 @@ public:
 	CString m_strZEBRA_IP, m_strZEBRA_Port, m_strDMS_IP, m_strDMS_Port;
 	CListBox m_ctlListEvent;
 
-	void TitleChangeExplorer(LPCTSTR Text);
-	void ProgressChangeExplorer(long Progress, long ProgressMax);
-	void StatusTextChangeExplorer(LPCTSTR Text);
+	
 
 // TCP/IP
 	CListBox m_ctlListSocket;
 	CString  m_strFileName;
 	BOOL	 m_bDMSconnected;
 
-	void AddLogSocket(CString str);
+	void DisplayLogSocket(CString str);
 
 	//DMS 통신
 	CConnectSocket	m_Socket;
@@ -139,7 +140,7 @@ public:
 	afx_msg void OnBnClickedBtZebraStatusStop();
 	
 	//2016-10-25     
-	int		m_nStatusCheckTerm;
+	int		m_nZebraCheckTerm;
 	int		m_nImgInMemoryLimit;
 	void    RecordZebraRecovery(BOOL bRecoveryEnd); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 	void	StartMonitoringZEBRA();
@@ -160,6 +161,10 @@ public:
 	void    TimeSync(CString str);
 
 	afx_msg void OnBnClickedBtTimesync();
+
+	//2017-01-16
+	int		m_nSaveImageTerm; //NavigateComplete2Explorer - EndUrl (Preview Label 페이지 이동)후 이미지저장 Term
+	int		m_nDMS_ConnectTerm;
 };
 
 

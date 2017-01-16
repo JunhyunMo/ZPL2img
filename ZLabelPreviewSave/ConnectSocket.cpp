@@ -21,7 +21,10 @@ CConnectSocket::~CConnectSocket()
 void CConnectSocket::OnClose(int nErrorCode)
 {
 	((CZLabelPreviewSaveDlg*)AfxGetMainWnd())->Disconnect2DMS();
-	AfxGetMainWnd()->SetTimer(IDD_ZLABELPREVIEWSAVE_DIALOG+1, 1000*5, NULL); //DMS 접속
+	//2017-01-16
+	//AfxGetMainWnd()->SetTimer(IDD_ZLABELPREVIEWSAVE_DIALOG+1, 1000*5, NULL); //DMS 접속
+	int nElapse = ((CZLabelPreviewSaveDlg*)AfxGetMainWnd())->m_nDMS_ConnectTerm * 1000;
+	AfxGetMainWnd()->SetTimer(IDD_ZLABELPREVIEWSAVE_DIALOG+1,nElapse, NULL); 
 }
 
 void CConnectSocket::OnReceive(int nErrorCode)
@@ -50,7 +53,7 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		strRcv.Format(_T("%s"),szTBuffer);		
 		pMain->LogRcvDMS(strRcv);
 		strLog.Format(L"[RCV-DMS] %s", szTBuffer);
-		pMain->AddLogSocket(strLog);
+		pMain->DisplayLogSocket(strLog);
 
 		if(strRcv != L"RESET" && strRcv.Left(4) != L"TIME" ) //2016-10-17
 		{
@@ -90,13 +93,13 @@ void CConnectSocket::OnReceive(int nErrorCode)
 			{
 				strLog.Format(L"[SND-DMS] %s", szTBuffer);
 				pMain->LogSend2DMS(szTBuffer);
-				pMain->AddLogSocket(strLog);
+				pMain->DisplayLogSocket(strLog);
 			}
 			else
 			{
 				strLog.Format(L"[ERROR][SND-DMS] - %s", szTBuffer);
 				pMain->LogSend2DMS(szTBuffer);
-				pMain->AddLogSocket(strLog);
+				pMain->DisplayLogSocket(strLog);
 			}
 			pMain->PrepareNewZPL(); //2015-10-04 RETRY시 TAB order 초기화-테스트 要
 		}
@@ -142,7 +145,7 @@ void CConnectSocket2::OnReceive(int nErrorCode)
 		{
 			pMain->MBCS2Unicode(chBuff,Buff);
 			strLog.Format(_T("[RCV-ZEBRA] %s"),Buff);
-			pMain->AddLogSocket(strLog);
+			pMain->DisplayLogSocket(strLog);
 			pMain->ParseZEBRAResponse(Buff);
 			
 		}
