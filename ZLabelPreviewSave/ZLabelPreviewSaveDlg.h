@@ -92,7 +92,7 @@ public:
 	void	EnterKey(CWnd* pWnd);
 	void	PrepareNewZPL();
 //
-	void ZPL2Img();
+	HRESULT ZPL2Img(); //2017-01-18 수정 return HRESULT
 
 // http
 	void ConnectZEBRA(); // http connect
@@ -131,7 +131,7 @@ public:
 	void	Disconnect2ZEBRA();
 	int		SocketSend2(CString strSendPacket);
 	int		SendToZEBRA(CString strZPL);
-	//void	ParseResponse(TCHAR* tch);
+	
 	void	ParseZEBRAResponse(TCHAR* tch); //2016-10-21 ~HS command response parsing
 	void	LogRcvZEBRA(CString str);
 	void	LogSend2ZEBRA(CString str);
@@ -141,7 +141,7 @@ public:
 	
 	//2016-10-25     
 	int		m_nZebraCheckTerm;
-	int		m_nImgInMemoryLimit;
+	//int		m_nImgInMemoryLimit; - 2017-01-20 주석처리
 	void    RecordZebraRecovery(BOOL bRecoveryEnd); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 	void	StartMonitoringZEBRA();
 	void	StopMoniteringZEBRA();
@@ -165,6 +165,11 @@ public:
 	//2017-01-16
 	int		m_nSaveImageTerm; //NavigateComplete2Explorer - EndUrl (Preview Label 페이지 이동)후 이미지저장 Term
 	int		m_nDMS_ConnectTerm;
+	//2017-01-18
+	int		m_nTimeOut;
+	void    Retry();
+	//2017-01-20
+	CString     m_strNumOfImgInMemory;
 };
 
 

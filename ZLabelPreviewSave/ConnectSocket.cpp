@@ -62,11 +62,13 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		else if(strRcv == L"RESET")
 		{
 			pMain->ResetByDMS(m_strRcvZPL);
+			CSocket::OnReceive(nErrorCode);
 			return;
 		}
 		else if(strRcv.Left(4) == L"TIME")
 		{
 			pMain->TimeSync(strRcv.Mid(8));
+			CSocket::OnReceive(nErrorCode);
 			return;
 		}
 
@@ -75,8 +77,18 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		int nIdx2 = m_strRcvZPL.Find(L"^XZ");
 		if( nIdx >= 0 && nIdx2 > 0 ) // 2017-01-09
 		{
-			pMain->m_strZPL = m_strRcvZPL;
-		
+			//2017-01-18
+			if(pMain->m_strZPL == L"")
+			{
+				pMain->m_strZPL = m_strRcvZPL;
+			}
+			else
+			{
+				CSocket::OnReceive(nErrorCode);
+				return;
+			}
+			//
+
 			pMain->SetFocusOnWebCtrl(); //2016-10-26
 			//
 			pMain->ProcessStart();
@@ -91,14 +103,17 @@ void CConnectSocket::OnReceive(int nErrorCode)
 
 			if(pMain->m_Socket.Send((LPVOID)szBuffer, strlen(szBuffer) + 1) == TRUE)
 			{
-				strLog.Format(L"[SND-DMS] %s", szTBuffer);
+				strLog.Format(L"[SND-DMS] in void CConnectSocket::OnReceive(...) - missing ^XA or ^XZ %s", szTBuffer);
+				GetLog()->Debug(strLog.GetBuffer(0));
+
 				pMain->LogSend2DMS(szTBuffer);
 				pMain->DisplayLogSocket(strLog);
 			}
 			else
 			{
 				strLog.Format(L"[ERROR][SND-DMS] - %s", szTBuffer);
-				pMain->LogSend2DMS(szTBuffer);
+				//pMain->LogSend2DMS(szTBuffer);
+				GetLog()->Debug(strLog.GetBuffer(0));
 				pMain->DisplayLogSocket(strLog);
 			}
 			pMain->PrepareNewZPL(); //2015-10-04 RETRY시 TAB order 초기화-테스트 要
