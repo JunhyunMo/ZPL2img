@@ -170,6 +170,7 @@ public:
 	void    Retry();
 	//2017-01-20
 	CString     m_strNumOfImgInMemory;
+	afx_msg void OnBnClickedBtRebootZebra();
 };
 
 

@@ -927,6 +927,7 @@ BEGIN_MESSAGE_MAP(CZLabelPreviewSaveDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BT_EMERGENCY, &CZLabelPreviewSaveDlg::OnBnClickedBtEmergency)
 	ON_BN_CLICKED(IDC_BT_CONFIG, &CZLabelPreviewSaveDlg::OnBnClickedBtConfig)
 	ON_BN_CLICKED(IDC_BT_TIMESYNC, &CZLabelPreviewSaveDlg::OnBnClickedBtTimesync)
+	ON_BN_CLICKED(IDC_BT_REBOOT_ZEBRA, &CZLabelPreviewSaveDlg::OnBnClickedBtRebootZebra)
 END_MESSAGE_MAP()
 
 BEGIN_EVENTSINK_MAP(CZLabelPreviewSaveDlg, CDialogEx)
@@ -1994,7 +1995,7 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 	strLog.Format(L"[~HS]PaperOut:%s/Pause:%s/HeadUp:%s/RibbonOut:%s/ThermalTrans:%s/"
 				  L"PrintMode:%s/NumOfImgInMemory:%s", 
 				  strPaperOut, strPauseFlag, strHeadUp, strRibbonOut,strThermalTransMode,
-				  strPrintMode, strNumOfImgInMemory);
+				  strPrintMode, m_strNumOfImgInMemory);
 	GetLog()->Debug(strLog.GetBuffer());
 	//화면표시
 	CTime t = CTime::GetCurrentTime();
@@ -2004,18 +2005,18 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 	strLog.Format(L"[%s]\r\n"
 				  L"PaperOut:%s/ Pause:%s\r\n"
 				  L"HeadUp:%s/ RibbonOut:%s\r\n"
-				  L"ThermalTrans:%s/ PrintMode:%s\r\n"
-			      L"NumOfImgInMemory:%s", 
+				  L"ThermalTrans:%s/ PrintMode:%s", 
 				  strTime,
-				  strPaperOut, strPauseFlag, strHeadUp, strRibbonOut,
-				  strThermalTransMode, strPrintMode, m_strNumOfImgInMemory);
+				  strPaperOut, strPauseFlag, 
+				  strHeadUp, strRibbonOut,
+				  strThermalTransMode, strPrintMode);
 	SetDlgItemText(IDC_EDIT_ZEBRA,strLog);
 	//
 	Disconnect2ZEBRA();
 
-	int nImgInMemory = _wtoi(strNumOfImgInMemory);
+	//int nImgInMemory = _wtoi(strNumOfImgInMemory);
 	//if(strPaperOut != L"0" || strPauseFlag != L"0" || nImgInMemory > m_nImgInMemoryLimit ) //
-	if(strPaperOut != L"0" || strPauseFlag != L"0" ) //2017-01-20
+	if(strPaperOut != L"0" || strPauseFlag != L"0" ) //2017-01-20 REBOOT 조건 변경
 	{
 		int nRet = SendToDMS(L"REBOOT");
 		if(nRet > 0 )
@@ -2032,14 +2033,14 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 					strLog.Format(L"[REBOOT ZEBRA] PaperOut:%s / Pause:%s / NumOfImgInMemory:%s | SendToZEBRA(~JR) - %d", 
 					strPaperOut, strPauseFlag, m_strNumOfImgInMemory, nRet);
 					GetLog()->Debug(strLog.GetBuffer());
+
+					RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
+					RecordExitTime();
+					PostMessage(WM_QUIT);  //프로그램 종료
 					break;
 				}
 				Sleep(50);
-			}
-
-			RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
-			RecordExitTime();
-			PostMessage(WM_QUIT);  //프로그램 종료
+			}	
 		}
 	}
 
@@ -2165,4 +2166,33 @@ void CZLabelPreviewSaveDlg::Retry()
 	Sleep(50);
 	SendToDMS(L"RETRY");
 	SetFocusOnWebCtrl();
+}
+//2017-01-21
+void CZLabelPreviewSaveDlg::OnBnClickedBtRebootZebra()
+{
+	CString strLog = L"";
+	int nRet = SendToDMS(L"REBOOT");
+	if(nRet > 0 )
+	{
+		Disconnect2DMS();
+		m_bPauseMonitoringZEBRA = TRUE;
+
+		for (int i=0; i < 5; i++) //재부팅 확실하게 5번 시도
+		{
+			nRet = SendToZEBRA(L"~JR"); // ~JR : Power On Reset
+		
+			if(nRet == 4) //~JR(null)  //2016-11-02
+			{
+				strLog.Format(L"[REBOOT ZEBRA] OnBnClickedBtRebootZebra() NumOfImgInMemory:%s | SendToZEBRA(~JR) - %d", 
+								 m_strNumOfImgInMemory, nRet);
+				GetLog()->Debug(strLog.GetBuffer());
+
+				RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
+				RecordExitTime();
+				PostMessage(WM_QUIT);  //프로그램 종료
+				break;
+			}
+			Sleep(50);
+		}
+	}
 }
