@@ -171,6 +171,8 @@ public:
 	//2017-01-20
 	CString     m_strNumOfImgInMemory;
 	afx_msg void OnBnClickedBtRebootZebra();
+	//2017-01-23
+	void	Initialize();
 };
 
 

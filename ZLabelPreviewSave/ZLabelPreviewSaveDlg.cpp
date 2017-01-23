@@ -2018,6 +2018,9 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 	//if(strPaperOut != L"0" || strPauseFlag != L"0" || nImgInMemory > m_nImgInMemoryLimit ) //
 	if(strPaperOut != L"0" || strPauseFlag != L"0" ) //2017-01-20 REBOOT 조건 변경
 	{
+		//2017-01-23 참고 "~JA" command
+		//~JA (Cancel All) - All internal buffers are cleared of data. The DATA LED turns off
+		//But ZebraNet Print Server 복구는 버벅댐. 기존 방식대로 재부팅으로 처리
 		int nRet = SendToDMS(L"REBOOT");
 		if(nRet > 0 )
 		{
@@ -2184,6 +2187,36 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtRebootZebra()
 			if(nRet == 4) //~JR(null)  //2016-11-02
 			{
 				strLog.Format(L"[REBOOT ZEBRA] OnBnClickedBtRebootZebra() NumOfImgInMemory:%s | SendToZEBRA(~JR) - %d", 
+								 m_strNumOfImgInMemory, nRet);
+				GetLog()->Debug(strLog.GetBuffer());
+
+				RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
+				RecordExitTime();
+				PostMessage(WM_QUIT);  //프로그램 종료
+				break;
+			}
+			Sleep(50);
+		}
+	}
+}
+
+//2017-01-23
+void CZLabelPreviewSaveDlg::Initialize()
+{
+	CString strLog = L"";
+	int nRet = SendToDMS(L"REBOOT");
+	if(nRet > 0 )
+	{
+		Disconnect2DMS();
+		m_bPauseMonitoringZEBRA = TRUE;
+
+		for (int i=0; i < 5; i++) //재부팅 확실하게 5번 시도
+		{
+			nRet = SendToZEBRA(L"~JR"); // ~JR : Power On Reset
+		
+			if(nRet == 4) //~JR(null)  //2016-11-02
+			{
+				strLog.Format(L"[REBOOT ZEBRA] Initialize() NumOfImgInMemory:%s | SendToZEBRA(~JR) - %d", 
 								 m_strNumOfImgInMemory, nRet);
 				GetLog()->Debug(strLog.GetBuffer());
 

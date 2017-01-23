@@ -55,7 +55,8 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		strLog.Format(L"[RCV-DMS] %s", szTBuffer);
 		pMain->DisplayLogSocket(strLog);
 
-		if(strRcv != L"RESET" && strRcv.Left(4) != L"TIME" ) //2016-10-17
+		//if(strRcv != L"RESET" && strRcv.Left(4) != L"TIME" ) //2016-10-17
+		if(strRcv != L"RESET" && strRcv.Left(4) != L"TIME" && strRcv != L"INITIALIZE" ) //2017-01-23
 		{
 			m_strRcvZPL = strRcv;
 		}
@@ -71,7 +72,12 @@ void CConnectSocket::OnReceive(int nErrorCode)
 			CSocket::OnReceive(nErrorCode);
 			return;
 		}
-
+		else if(strRcv == L"INITIALIZE") //2017-01-23
+		{
+			pMain->Initialize();
+			CSocket::OnReceive(nErrorCode);
+			return;
+		}
 
 		int nIdx = m_strRcvZPL.Find(L"^XA"); 
 		int nIdx2 = m_strRcvZPL.Find(L"^XZ");
