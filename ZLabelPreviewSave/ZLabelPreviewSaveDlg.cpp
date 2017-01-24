@@ -898,6 +898,7 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	//2017-01-20
 	m_strNumOfImgInMemory = L"";
 //^XA^FO 80,80^AE 21,10^FD ZEBRA PRINTER^FS^XZ
+
 }
 
 void CZLabelPreviewSaveDlg::DoDataExchange(CDataExchange* pDX)
@@ -1286,7 +1287,7 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtExit()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	CString strLog;
-	strLog.Format(L"Process Exit - OnBnClickedBtExit() [Num Of Image In Memory %s]",m_strNumOfImgInMemory);
+	strLog.Format(L"[Process Exit] - OnBnClickedBtExit() [Num Of Image In Memory %s]",m_strNumOfImgInMemory);
 	GetLog()->Debug(strLog.GetBuffer());
 	PostMessage(WM_QUIT);
 }
@@ -1458,7 +1459,7 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 		m_nStatus = -100; //Page err
 		
 		//2016-10-21 
-		strLog.Format(L"[ERROR]TitleChangeExplorer - %s [Num Of Image In Memory %s]",Text, m_strNumOfImgInMemory);
+		strLog.Format(L"[ERROR][Process Exit] TitleChangeExplorer - %s [Num Of Image In Memory %s]",Text, m_strNumOfImgInMemory);
 		GetLog()->Debug(strLog.GetBuffer());
 		AddLogEvent(Text);
 		//
@@ -1507,7 +1508,7 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 	{
 		//2016-10-21 
 		CString strLog;
-		strLog.Format(L"[ERROR]StatusTextChangeExplorer - %s [Num Of Image In Memory %s]"
+		strLog.Format(L"[ERROR][Process Exit]StatusTextChangeExplorer - %s [Num Of Image In Memory %s]"
 			,m_strStatusText
 			,m_strNumOfImgInMemory); //2017-01-20
 		GetLog()->Debug(strLog.GetBuffer());
@@ -1520,7 +1521,8 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 		//	PrepareNewZPL();
 		//	SetTimer(IDD+100,1000*10,NULL); //PrepareNewZPL
 		//}
-		PostMessage(WM_QUIT);
+		RecordExitTime();
+		PostMessage(WM_QUIT);  //프로그램 종료   
 	}
 }
 
@@ -1565,7 +1567,7 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	else if(nIDEvent == IDD+1111) //2017-01-09
 	{
-		CString strLog = L"[TimeOut]";
+		CString strLog = L"[TIMEOUT]";
 		
 		if(m_strPrevZPL == m_strZPL)
 		{
@@ -1577,7 +1579,7 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 			KillTimer(IDD+1111);
 		}
 	}
-	
+
 	CDialogEx::OnTimer(nIDEvent);
 }
 
@@ -1876,9 +1878,15 @@ BOOL CZLabelPreviewSaveDlg::Connect2ZEBRA(CString strZebraIP, UINT nPort) // TCP
 		m_Socket2.Close();
 		m_Socket2.CancelBlockingCall(); //
 
-		CString strLog = _T("[ERROR] Connect ZEBRA fail.");
+		//2017-01-24 오류처리추가
+		//CString strLog = _T("[ERROR] Connect ZEBRA fail. - ");
+		CString strLog;
+		strLog.Format(L"[ERROR][Process Exit] - Connect ZEBRA fail. [Num Of Image In Memory %s]", m_strNumOfImgInMemory);
 		GetLog()->Debug(strLog.GetBuffer());
 		DisplayLogSocket(strLog);
+
+		RecordExitTime();
+		PostMessage(WM_QUIT);  //프로그램 종료   
 
 		return FALSE;
 	}
