@@ -896,7 +896,7 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	m_bPauseMonitoringZEBRA = FALSE;
 
 	//2017-01-20
-	m_strNumOfImgInMemory = L"";
+	m_strNumOfImgInMemory = L"--";
 //^XA^FO 80,80^AE 21,10^FD ZEBRA PRINTER^FS^XZ
 
 }
@@ -1349,6 +1349,9 @@ BOOL CZLabelPreviewSaveDlg::ReadConfigFile() // \\ZPL2img.INI
 	ZeroMemory(szValue, 0xFF);
 	if (GetPrivateProfileString(L"ZEBRA", L"TIMEOUT", L"", szValue, sizeof(szValue), strPath))
 		m_nTimeOut = _wtoi(szValue); 
+	//2017-01-25
+	if (GetPrivateProfileString(L"ZEBRA", L"MAX_IMG_COUNT", L"", szValue, sizeof(szValue), strPath))
+		m_nMaxImgCnt = _wtoi(szValue); 
 	//
 	ZeroMemory(szValue, 0xFF);
 	if (GetPrivateProfileString(L"DMS", L"DMS_IP", L"", szValue, sizeof(szValue), strPath))
@@ -1778,7 +1781,8 @@ void CZLabelPreviewSaveDlg::ResetByDMS(CString strZPL)
 	//RecordExitTime(); //
 	//PostMessage(WM_QUIT);
 
-	CString strLog = _T("[ResetByDMS-Emergency]");
+	CString strLog;
+	strLog.Format(L"[ResetByDMS-Emergency][LAST ZPL] %s", strZPL); //2017-01-25
 	GetLog()->Debug(strLog.GetBuffer());	
 
 	PrepareNewZPL(); //2017-01-09
@@ -1834,11 +1838,8 @@ void CZLabelPreviewSaveDlg::RecordZebraRecovery(BOOL bRecoveryEnd) //TRUE: 복구�
 
 void CZLabelPreviewSaveDlg::RecordExitTime()
 {
-	//Log 
 	CString strLog;
-	strLog = L"ExitProcess...";
-	GetLog()->Debug(strLog.GetBuffer());
-	
+
 	//AppMonitor.ini 기록
 	TCHAR szCurrentPath[1024];
 	GetCurrentDirectory(1024, szCurrentPath);
@@ -1860,6 +1861,36 @@ void CZLabelPreviewSaveDlg::RecordExitTime()
 			st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
 	WritePrivateProfileString(L"APP_MONITOR",L"APP_EXIT_TIME",strTime,strPath);
+
+//2017-01-25
+	//Log 
+	strLog.Format(L"[RecordExitTime] %s",strTime);
+	GetLog()->Debug(strLog.GetBuffer());
+}
+
+//2017-01-25
+void CZLabelPreviewSaveDlg::RecordMaxImgCount(CString strCount)
+{
+	CString strLog;
+
+	//AppMonitor.ini 기록
+	TCHAR szCurrentPath[1024];
+	GetCurrentDirectory(1024, szCurrentPath);
+	CString strPath = szCurrentPath;
+	CString strExePath = GetExecuteDirectory();
+	strPath.Format(L"%s\\ZPL2img.ini", strExePath);
+	
+	if(!PathFileExists(strPath)) 
+	{
+		strLog = L"[Error] ZPL2img.ini 파일이 존재하지 않습니다.";
+		GetLog()->Debug(strLog.GetBuffer());
+		return;
+	}
+	
+	WritePrivateProfileString(L"ZEBRA",L"MAX_IMG_COUNT",strCount,strPath);
+	strLog.Format(L"[RecordMaxImgCount] %s",strCount);
+	GetLog()->Debug(strLog.GetBuffer());
+	
 }
 
 //2016-10-21 ZEBRA 상태체크용
@@ -2047,6 +2078,11 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 
 					RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 					RecordExitTime();
+					//2017-01-25
+					if(_wtoi(m_strNumOfImgInMemory) > m_nMaxImgCnt)
+					{
+						RecordMaxImgCount(m_strNumOfImgInMemory);
+					}
 					PostMessage(WM_QUIT);  //프로그램 종료
 					break;
 				}
@@ -2138,7 +2174,6 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtConfig()
 		ShellExecute(NULL,L"open",L"ZPL2img.INI",NULL,NULL,SW_SHOW); //설정파일 열기
 		CString strLog = L"설정파일(ZPL2img.INI) 열림.";
 		GetLog()->Debug(strLog.GetBuffer());
-		//PostMessage(WM_QUIT);
 	}	
 }
 
@@ -2200,6 +2235,11 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtRebootZebra()
 
 				RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 				RecordExitTime();
+				//2017-01-25
+				if(_wtoi(m_strNumOfImgInMemory) > m_nMaxImgCnt)
+				{
+					RecordMaxImgCount(m_strNumOfImgInMemory);
+				}
 				PostMessage(WM_QUIT);  //프로그램 종료
 				break;
 			}
@@ -2230,6 +2270,11 @@ void CZLabelPreviewSaveDlg::Initialize()
 
 				RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 				RecordExitTime();
+				//2017-01-25
+				if(_wtoi(m_strNumOfImgInMemory) > m_nMaxImgCnt)
+				{
+					RecordMaxImgCount(m_strNumOfImgInMemory);
+				}
 				PostMessage(WM_QUIT);  //프로그램 종료
 				break;
 			}

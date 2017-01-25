@@ -173,6 +173,9 @@ public:
 	afx_msg void OnBnClickedBtRebootZebra();
 	//2017-01-23
 	void	Initialize();
+	//2017-01-25
+	void	RecordMaxImgCount(CString strCount);
+	int		m_nMaxImgCnt;
 };
 
 
