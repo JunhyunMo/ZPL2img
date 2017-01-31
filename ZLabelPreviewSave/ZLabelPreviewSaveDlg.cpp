@@ -978,14 +978,18 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
     hEvent = CreateEvent(NULL, FALSE, TRUE, AfxGetAppName());
     if ( GetLastError() == ERROR_ALREADY_EXISTS)
     {
-		PostMessage(WM_QUIT);
+		//2017-01-31 변경
+		//PostMessage(WM_QUIT);  //프로그램 종료   
+		EndDialog(IDOK);
     }
 	//
 
 	if(!ReadConfigFile())
 	{
 		MessageBox(L"ZPL2img.INI 설정파일 오류!",L"Error",MB_OK|MB_ICONERROR);
-		PostMessage(WM_QUIT);
+		//2017-01-31 변경
+		//PostMessage(WM_QUIT);  //프로그램 종료   
+		EndDialog(IDOK);
 	}
 
 	StartMonitoringZEBRA();
@@ -1289,7 +1293,9 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtExit()
 	CString strLog;
 	strLog.Format(L"[Process Exit] - OnBnClickedBtExit() [Num Of Image In Memory %s]",m_strNumOfImgInMemory);
 	GetLog()->Debug(strLog.GetBuffer());
-	PostMessage(WM_QUIT);
+	//2017-01-31 변경
+	//PostMessage(WM_QUIT);  //프로그램 종료   
+	EndDialog(IDOK);
 }
 
 CString CZLabelPreviewSaveDlg::GetExecuteDirectory()
@@ -1467,7 +1473,9 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 		AddLogEvent(Text);
 		//
 		RecordExitTime();
-		PostMessage(WM_QUIT);  //프로그램 종료   
+		//2017-01-31 변경
+		//PostMessage(WM_QUIT);  //프로그램 종료   
+		EndDialog(IDOK);
 	}
 }
 
@@ -1525,7 +1533,9 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 		//	SetTimer(IDD+100,1000*10,NULL); //PrepareNewZPL
 		//}
 		RecordExitTime();
-		PostMessage(WM_QUIT);  //프로그램 종료   
+		//2017-01-31 변경
+		//PostMessage(WM_QUIT);  //프로그램 종료   
+		EndDialog(IDOK);
 	}
 }
 
@@ -1917,8 +1927,10 @@ BOOL CZLabelPreviewSaveDlg::Connect2ZEBRA(CString strZebraIP, UINT nPort) // TCP
 		DisplayLogSocket(strLog);
 
 		RecordExitTime();
-		PostMessage(WM_QUIT);  //프로그램 종료   
-
+		//2017-01-31 변경
+		//PostMessage(WM_QUIT);  //프로그램 종료   
+		EndDialog(IDOK);
+//
 		return FALSE;
 	}
 	else
@@ -2009,6 +2021,7 @@ void CZLabelPreviewSaveDlg::LogSend2ZEBRA(CString str)
 
 void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS command response parsing
 {
+	CString strLog = L"";
 	CString strStatus = tch;
 
 	LogRcvZEBRA(strStatus);
@@ -2027,15 +2040,18 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 	AfxExtractSubString(strNumOfImgInMemory, strStatus, 21, ','); //Number of Graphic Images stored in Memory
 	//2017-01-20 ex) [RCV-ZEBRA] ...00000000,1,(0x02)021(0x03)\r\n(0x02)1234(0x03),0
 	int nIdx = strNumOfImgInMemory.Find(0x03); //ETX
-	m_strNumOfImgInMemory = strNumOfImgInMemory.Left(nIdx);
-	SetDlgItemText(IDC_EDIT_IMG_NO,m_strNumOfImgInMemory);
-	//log
-	CString strLog = L"";
-	strLog.Format(L"[~HS]PaperOut:%s/Pause:%s/HeadUp:%s/RibbonOut:%s/ThermalTrans:%s/"
-				  L"PrintMode:%s/NumOfImgInMemory:%s", 
-				  strPaperOut, strPauseFlag, strHeadUp, strRibbonOut,strThermalTransMode,
-				  strPrintMode, m_strNumOfImgInMemory);
-	GetLog()->Debug(strLog.GetBuffer());
+	//2017-01-31 변동 있을 때만 기록하게 변경. Log 줄임
+	if(strPaperOut != L"0" || strPauseFlag != L"0" || m_strNumOfImgInMemory != strNumOfImgInMemory.Left(nIdx) )
+	{
+		m_strNumOfImgInMemory = strNumOfImgInMemory.Left(nIdx);
+		SetDlgItemText(IDC_EDIT_IMG_NO,m_strNumOfImgInMemory);
+	
+		strLog.Format(L"[~HS]PaperOut:%s/Pause:%s/HeadUp:%s/RibbonOut:%s/ThermalTrans:%s/"
+					  L"PrintMode:%s/NumOfImgInMemory:%s", 
+					  strPaperOut, strPauseFlag, strHeadUp, strRibbonOut,strThermalTransMode,
+					  strPrintMode, m_strNumOfImgInMemory);
+		GetLog()->Debug(strLog.GetBuffer());
+	}
 	//화면표시
 	CTime t = CTime::GetCurrentTime();
 	CString strTime = L"";
@@ -2083,7 +2099,9 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 					{
 						RecordMaxImgCount(m_strNumOfImgInMemory);
 					}
-					PostMessage(WM_QUIT);  //프로그램 종료
+					//2017-01-31 변경
+					//PostMessage(WM_QUIT);  //프로그램 종료   
+					EndDialog(IDOK);
 					break;
 				}
 				Sleep(50);
@@ -2240,7 +2258,9 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtRebootZebra()
 				{
 					RecordMaxImgCount(m_strNumOfImgInMemory);
 				}
-				PostMessage(WM_QUIT);  //프로그램 종료
+				//2017-01-31 변경
+				//PostMessage(WM_QUIT);  //프로그램 종료   
+				EndDialog(IDOK);
 				break;
 			}
 			Sleep(50);
@@ -2275,7 +2295,9 @@ void CZLabelPreviewSaveDlg::Initialize()
 				{
 					RecordMaxImgCount(m_strNumOfImgInMemory);
 				}
-				PostMessage(WM_QUIT);  //프로그램 종료
+				//2017-01-31 변경
+				//PostMessage(WM_QUIT);  //프로그램 종료   
+				EndDialog(IDOK);
 				break;
 			}
 			Sleep(50);
