@@ -1598,6 +1598,7 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CZLabelPreviewSaveDlg::SaveImage()
 {
+
 	// 현재 다이얼로그 핸들 값
 	CWnd *pDesktopWnd = (CZLabelPreviewSaveDlg*)GetForegroundWindow();
 	
@@ -1622,11 +1623,10 @@ void CZLabelPreviewSaveDlg::SaveImage()
 
 	CString strLog,strTemp;
 	HRESULT HResult = m_Image.Save(strPath, Gdiplus::ImageFormatPNG);
-	
 	strTemp = GetMessageForHResult(HResult); //
-	strLog.Format(L"%s %s",strTemp,strFileName);
+	strLog.Format(L"%s %s [m_nProgress = %d]",strTemp,strFileName,m_nProgress);//2017-02-03 m_nProgress 추가
 	GetLog()->Debug(strLog.GetBuffer());
-	
+
 	m_Image.ReleaseDC();
 	m_Image.Destroy();
 
@@ -1759,9 +1759,11 @@ int CZLabelPreviewSaveDlg::SendToDMS(CString strSendPacket)
 	Unicode2MBCS(strSendPacket.GetBuffer(0),chSendPacket);
 	nError = m_Socket.Send((LPVOID)chSendPacket,strlen(chSendPacket)+1);
 
-	if(nError < 0)
+	//if(nError < 0)
+	if(nError == SOCKET_ERROR) //2017-02-03
 	{
-		strLog.Format(_T("[ERROR] %s - ErrCode: %d"), strSendPacket, nError);
+		//strLog.Format(_T("[ERROR] %s - ErrCode: %d"), strSendPacket, nError);
+		strLog.Format(_T("[ERROR] %s - ErrCode: %d"), strSendPacket,GetLastError());
 		LogSend2DMS(strLog);
 
 		strLog.Format(_T("[SND-DMS][ERROR] %s - ErrCode: %d"), strSendPacket, nError);
@@ -1771,7 +1773,7 @@ int CZLabelPreviewSaveDlg::SendToDMS(CString strSendPacket)
 		OnBnClickedBtDisconnect();
 		OnBnClickedBtConnect();
 	}
-	else
+	else if(nError > 0)
 	{
 		strLog.Format(_T("%s"), strSendPacket);
 		LogSend2DMS(strSendPacket);
