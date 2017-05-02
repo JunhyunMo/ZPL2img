@@ -18,7 +18,7 @@
 #define ZPL19 L"^XA^LH0,0^PO^FS^FO010,010^A0,30,25^FD--------------------^FS^FO010,060^A0,30,30^FD SUPPLIER:SK hynix^FS^FO010,90^A0,30,30^FD DEVICE     :H9CKNNN8KTARKR-NTH^FS^FO010,120^A0,35,35^FD LOT NO. :T3LCZ88D     ( 5 / 5 )^FS^FO010,240^A0,30,30^FD DATE CODE:1524^FS^FO310,240^A0,30,30^FD Q'TY: 919 EA^FS^BY2,2.5:1,60 ^FS^FO035,160^B3,N,40,Y,N,^FDT3LCZ88D     005^FS^XZ^PQ"
 
 // CZLabelPreviewSaveDlg 대화 상자
-
+//Move Repository for security - create new GitHub account
 class CZLabelPreviewSaveDlg : public CDialogEx
 {
 	// 생성입니다.
