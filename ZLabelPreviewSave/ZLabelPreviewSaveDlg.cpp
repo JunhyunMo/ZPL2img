@@ -929,6 +929,7 @@ BEGIN_MESSAGE_MAP(CZLabelPreviewSaveDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BT_CONFIG, &CZLabelPreviewSaveDlg::OnBnClickedBtConfig)
 	ON_BN_CLICKED(IDC_BT_TIMESYNC, &CZLabelPreviewSaveDlg::OnBnClickedBtTimesync)
 	ON_BN_CLICKED(IDC_BT_REBOOT_ZEBRA, &CZLabelPreviewSaveDlg::OnBnClickedBtRebootZebra)
+	ON_BN_CLICKED(IDC_BT_AIM, &CZLabelPreviewSaveDlg::OnBnClickedBtAim)
 END_MESSAGE_MAP()
 
 BEGIN_EVENTSINK_MAP(CZLabelPreviewSaveDlg, CDialogEx)
@@ -992,7 +993,7 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 		EndDialog(IDOK);
 	}
 
-	StartMonitoringZEBRA();
+	//StartMonitoringZEBRA(); //???? 중복
 
 	MoveWindow(0,0,1280,1024);
 
@@ -1025,6 +1026,9 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 
 	RecordZebraRecovery(TRUE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 	StartMonitoringZEBRA();
+
+	//2017-06-08
+	GetDlgItem(IDC_BT_AIM)->MoveWindow(m_nRectX,m_nRectY,m_nRectCX,m_nRectCY);
 	
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -1081,6 +1085,7 @@ HCURSOR CZLabelPreviewSaveDlg::OnQueryDragIcon()
 void CZLabelPreviewSaveDlg::GoHome(void)
 {
 	m_IExplorer.Navigate(m_strHomeUrl,NULL,NULL,NULL,NULL);
+	GetDlgItem(IDC_BT_AIM)->ShowWindow(SW_SHOW); //2017-06-14
 }
 
 void CZLabelPreviewSaveDlg::SetClipboardText(CString &szData)
@@ -1213,6 +1218,82 @@ HRESULT CZLabelPreviewSaveDlg::ZPL2Img()
 	SetForegroundWindow();
 	EnterKey(GetDlgItem(IDC_EXPLORER));
 
+	return S_OK;
+}
+
+HRESULT CZLabelPreviewSaveDlg::ZPL2ImgEx() //2017-06-14 v2.0 TAB key -> SetCursorPos 
+{
+	if(m_strZPL.GetLength() <= 0)
+	{
+		CString strLog = L"[ERROR] m_strZPL.GetLength() <= 0"; 
+		GetLog()->Debug(strLog.GetBuffer());
+		Retry(); //2017-01-18
+		return S_FALSE;
+	}
+
+	if(CheckZPL(m_strZPL) == FALSE) //2017-01-08
+	{
+		CString strLog;
+		strLog.Format(L"[ERROR] CheckZPL(...) == FALSE\r\n[m_strZPL]%s",m_strZPL); 
+		GetLog()->Debug(strLog.GetBuffer());
+		Retry(); //2017-01-18
+		return S_FALSE;
+	}
+
+	CString strLog;
+	SetClipboardText(m_strZPL);
+
+	SetFocusOnWebCtrl(); 
+	GetClipboardText();
+
+//2017-06-14 v2.0 TAB key -> SetCursorPos 
+//////////////////////////////////////////////////////////////////////////////////////////////
+	CRect r;
+	int x,y;
+	CPoint point;
+
+	GetDlgItem(IDC_EXPLORER)->GetWindowRect(r);
+	x = (r.left + r.right) / 2;
+	y = (r.top + r.bottom) / 2;
+	SetCursorPos(x, y);
+
+	GetCursorPos(&point);
+	if(r.PtInRect(point))
+	{
+		ClickMouse(x, y, 1); 
+		CtrlV(GetDlgItem(IDC_EXPLORER));
+	}
+	else
+	{
+		strLog.Format(L"[ERROR]r.PtInRect(point) - <IDC_EXPLORER> r.left:%d r.right:%d x:%d y:%d GetCusorPos()-> %d,%d",
+												 r.left, r.right, x, y ,point.x, point.y);
+		GetLog()->Debug(strLog.GetBuffer());
+		Retry();
+		return S_FALSE;
+	}
+	
+	GetDlgItem(IDC_BT_AIM)->GetWindowRect(r);
+
+	x = (r.left + r.right) / 2;
+	y = (r.top + r.bottom) / 2;
+	SetCursorPos(x, y);
+
+	GetCursorPos(&point);
+
+	if(r.PtInRect(point))
+	{
+		GetDlgItem(IDC_BT_AIM)->ShowWindow(SW_HIDE);
+		ClickMouse(x, y, 1); 
+	}
+	else
+	{
+		strLog.Format(L"[ERROR]r.PtInRect(point) - <IDC_BT_AIM> r.left:%d r.right:%d x:%d y:%d GetCusorPos()-> %d,%d",
+												 r.left, r.right, x, y ,point.x, point.y);
+		GetLog()->Debug(strLog.GetBuffer());
+		Retry(); 
+		return S_FALSE;
+	}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
 	return S_OK;
 }
 
@@ -1356,8 +1437,22 @@ BOOL CZLabelPreviewSaveDlg::ReadConfigFile() // \\ZPL2img.INI
 	if (GetPrivateProfileString(L"ZEBRA", L"TIMEOUT", L"", szValue, sizeof(szValue), strPath))
 		m_nTimeOut = _wtoi(szValue); 
 	//2017-01-25
+	ZeroMemory(szValue, 0xFF);
 	if (GetPrivateProfileString(L"ZEBRA", L"MAX_IMG_COUNT", L"", szValue, sizeof(szValue), strPath))
 		m_nMaxImgCnt = _wtoi(szValue); 
+	//2017-06-09
+	ZeroMemory(szValue, 0xFF);
+	if (GetPrivateProfileString(L"ZEBRA", L"RECT_X", L"", szValue, sizeof(szValue), strPath))
+		m_nRectX = _wtoi(szValue); 
+	ZeroMemory(szValue, 0xFF);
+	if (GetPrivateProfileString(L"ZEBRA", L"RECT_Y", L"", szValue, sizeof(szValue), strPath))
+		m_nRectY = _wtoi(szValue); 
+	ZeroMemory(szValue, 0xFF);
+	if (GetPrivateProfileString(L"ZEBRA", L"RECT_CX", L"", szValue, sizeof(szValue), strPath))
+		m_nRectCX = _wtoi(szValue); 
+	ZeroMemory(szValue, 0xFF);
+	if (GetPrivateProfileString(L"ZEBRA", L"RECT_CY", L"", szValue, sizeof(szValue), strPath))
+		m_nRectCY = _wtoi(szValue); 
 	//
 	ZeroMemory(szValue, 0xFF);
 	if (GetPrivateProfileString(L"DMS", L"DMS_IP", L"", szValue, sizeof(szValue), strPath))
@@ -1408,6 +1503,7 @@ void CZLabelPreviewSaveDlg::ConnectZEBRA() // http
 	strIP = m_strZEBRA_IP;
 
 	SetDlgItemText(IDC_ZEBRA_IPADDR, strIP );
+
 	m_strHomeUrl.Format(L"http://%s/printer/zpl%20post?dev=R&oname=UNKNOWN&otype=ZPL&pw=&data=",strIP); //2015-12-02 external print server
 	m_strEndUrl.Format(_T("http://%s"),strIP);
 	m_strEndUrl += _T("/printer/zpl"); //2015-12-02 external print server
@@ -1422,7 +1518,8 @@ void CZLabelPreviewSaveDlg::ProcessStart()
 	//m_strZPL.Replace(L"\\",L"\\\\"); - 2017-01-16 막음. DMS에서 ^FX-주석-제거
 	UpdateData(FALSE); //
 
-	HRESULT hResult = ZPL2Img();
+	//HRESULT hResult = ZPL2Img();
+	HRESULT hResult = ZPL2ImgEx();
 
 	if(hResult == S_OK)
 	{
@@ -2305,4 +2402,30 @@ void CZLabelPreviewSaveDlg::Initialize()
 			Sleep(50);
 		}
 	}
+}
+
+//2017-06-08
+void CZLabelPreviewSaveDlg::ClickMouse(int parm_x, int parm_y, char parm_left_flag) 
+{ 
+  int x_pos = parm_x*65535/GetSystemMetrics(SM_CXSCREEN); 
+  int y_pos = parm_y*65535/GetSystemMetrics(SM_CYSCREEN); 
+
+  ::mouse_event(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, x_pos, y_pos, 
+                                            0, ::GetMessageExtraInfo()); 
+  if(parm_left_flag){ 
+      ::mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_ABSOLUTE, 
+                              x_pos, y_pos, 0, ::GetMessageExtraInfo()); 
+      ::mouse_event(MOUSEEVENTF_LEFTUP | MOUSEEVENTF_ABSOLUTE, 
+                              x_pos, y_pos, 0, ::GetMessageExtraInfo()); 
+  } else { 
+      ::mouse_event(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_ABSOLUTE, 
+                              x_pos, y_pos, 0, ::GetMessageExtraInfo()); 
+      ::mouse_event(MOUSEEVENTF_RIGHTUP | MOUSEEVENTF_ABSOLUTE, 
+                              x_pos, y_pos, 0, ::GetMessageExtraInfo()); 
+  } 
+} 
+
+void CZLabelPreviewSaveDlg::OnBnClickedBtAim()
+{
+	AddLogEvent(L"Preview(Aim) Clicked");
 }

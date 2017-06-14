@@ -50,6 +50,8 @@ DECLARE_MESSAGE_MAP()
 	afx_msg void OnBnClickedBtDisconnect();
 	afx_msg void OnCbnCloseupCbZpl();
 	afx_msg void OnCbnCloseupCbZebraIp();
+	afx_msg void OnBnClickedBtAim();
+
 
 public:
 	CExplorer m_IExplorer;
@@ -93,6 +95,7 @@ public:
 	void	PrepareNewZPL();
 //
 	HRESULT ZPL2Img(); //2017-01-18 ¼öÁ¤ return HRESULT
+	HRESULT ZPL2ImgEx(); //2017-06-14 v2.0 TAB key -> SetCursorPos 
 
 // http
 	void ConnectZEBRA(); // http connect
@@ -176,6 +179,10 @@ public:
 	//2017-01-25
 	void	RecordMaxImgCount(CString strCount);
 	int		m_nMaxImgCnt;
+	//2017-06-08
+	void	ClickMouse(int parm_x, int parm_y, char parm_left_flag); 
+	//2017-06-09
+	int     m_nRectX,m_nRectY,m_nRectCX,m_nRectCY;
 };
 
 
