@@ -1572,7 +1572,8 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 		RecordExitTime();
 		//2017-01-31 변경
 		//PostMessage(WM_QUIT);  //프로그램 종료   
-		EndDialog(IDOK);
+		//EndDialog(IDOK);
+		SetTimer(IDD+1234,100,NULL); //2017-06-28 변경
 	}
 }
 
@@ -1632,7 +1633,8 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 		RecordExitTime();
 		//2017-01-31 변경
 		//PostMessage(WM_QUIT);  //프로그램 종료   
-		EndDialog(IDOK);
+		//EndDialog(IDOK);
+		SetTimer(IDD+1234,100,NULL); //2017-06-28 변경
 	}
 }
 
@@ -1682,12 +1684,17 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 		if(m_strPrevZPL == m_strZPL)
 		{
 			GetLog()->Debug(strLog.GetBuffer());
-			Retry(); //2017-01-18
+			//Retry(); //2017-01-18
+			SetTimer(IDD+1234,100,NULL); //2017-06-29 변경
 		}
 		else 
 		{
 			KillTimer(IDD+1111);
 		}
+	}
+	else if(nIDEvent == IDD+1234) //2017-06-28
+	{
+		EndDialog(IDOK);
 	}
 
 	CDialogEx::OnTimer(nIDEvent);
@@ -1894,10 +1901,12 @@ void CZLabelPreviewSaveDlg::ResetByDMS(CString strZPL)
 	strLog.Format(L"[ResetByDMS-Emergency][LAST ZPL] %s", strZPL); //2017-01-25
 	GetLog()->Debug(strLog.GetBuffer());	
 
-	PrepareNewZPL(); //2017-01-09
-	Sleep(500);
-	SendToDMS(L"RETRY");
-	SetFocusOnWebCtrl();
+	//PrepareNewZPL(); //2017-01-09
+	//Sleep(500);
+	//SendToDMS(L"RETRY");
+	//SetFocusOnWebCtrl();
+	
+	SetTimer(IDD+1234,100,NULL); //2017-06-29 변경
 }
 
 void CZLabelPreviewSaveDlg::LogRcvDMS(CString str)
@@ -1936,7 +1945,7 @@ void CZLabelPreviewSaveDlg::RecordZebraRecovery(BOOL bRecoveryEnd) //TRUE: 복구�
 			st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 	if(bRecoveryEnd == TRUE)
 	{
-		WritePrivateProfileString(L"ZEBRA",L"REBOOTING_TIME",strTime,strPath);
+		//WritePrivateProfileString(L"ZEBRA",L"REBOOTING_TIME",strTime,strPath); //2017-06-29 혼선의 여지 있어 막음. 재부팅 아님.
 		WritePrivateProfileString(L"ZEBRA",L"IN_REBOOTING",L"0",strPath);
 	}
 	else
@@ -2028,7 +2037,8 @@ BOOL CZLabelPreviewSaveDlg::Connect2ZEBRA(CString strZebraIP, UINT nPort) // TCP
 		RecordExitTime();
 		//2017-01-31 변경
 		//PostMessage(WM_QUIT);  //프로그램 종료   
-		EndDialog(IDOK);
+		//EndDialog(IDOK);
+		SetTimer(IDD+1234,100,NULL); //2017-06-28 변경
 //
 		return FALSE;
 	}

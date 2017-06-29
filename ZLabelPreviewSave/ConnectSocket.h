@@ -1,7 +1,7 @@
 #pragma once
 
 // CConnectSocket command target
-
+//To DMS
 class CConnectSocket : public CSocket
 {
 public:
@@ -12,7 +12,7 @@ public:
 
 	CString	m_strRcvZPL; //2016-10-17
 };
-
+//To ZEBRA
 class CConnectSocket2 : public CSocket
 {
 public:
