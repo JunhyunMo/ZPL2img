@@ -5,7 +5,7 @@
 #include "ZLabelPreviewSave.h"
 #include "ConnectSocket.h"
 #include "ZLabelPreviewSaveDlg.h"
-
+#include "Define.h" //2017-07-06
 // CConnectSocket
 
 CConnectSocket::CConnectSocket()
@@ -20,11 +20,17 @@ CConnectSocket::~CConnectSocket()
 // CConnectSocket member functions
 void CConnectSocket::OnClose(int nErrorCode)
 {
-	((CZLabelPreviewSaveDlg*)AfxGetMainWnd())->Disconnect2DMS();
+	//2017-07-06
+	ShutDown();
+	Close();
+	CSocket::OnClose(nErrorCode);
+
 	//2017-01-16
-	//AfxGetMainWnd()->SetTimer(IDD_ZLABELPREVIEWSAVE_DIALOG+1, 1000*5, NULL); //DMS 접속
+	 ((CZLabelPreviewSaveDlg*)AfxGetMainWnd())->m_bDMSconnected = FALSE; //2017-07-12 hot fix
 	int nElapse = ((CZLabelPreviewSaveDlg*)AfxGetMainWnd())->m_nDMS_ConnectTerm * 1000;
-	AfxGetMainWnd()->SetTimer(IDD_ZLABELPREVIEWSAVE_DIALOG+1,nElapse, NULL); 
+	//AfxGetMainWnd()->SetTimer(IDD_ZLABELPREVIEWSAVE_DIALOG+1,nElapse, NULL); 
+	AfxGetMainWnd()->SetTimer(TIMER_DMS_CONNECT,nElapse, NULL); //2017-07-06
+
 }
 
 void CConnectSocket::OnReceive(int nErrorCode)
@@ -83,6 +89,8 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		int nIdx2 = m_strRcvZPL.Find(L"^XZ");
 		if( nIdx >= 0 && nIdx2 > 0 ) // 2017-01-09
 		{
+			//2017-07-19 추가 - !!!
+			pMain->m_nZplToDo = 1;
 			//2017-01-18
 			if(pMain->m_strZPL == L"")
 			{
@@ -123,6 +131,7 @@ void CConnectSocket::OnReceive(int nErrorCode)
 				pMain->DisplayLogSocket(strLog);
 			}
 			pMain->PrepareNewZPL(); //2015-10-04 RETRY시 TAB order 초기화-테스트 要
+			
 		}
 	}
 
@@ -142,7 +151,10 @@ CConnectSocket2::~CConnectSocket2()
 // CConnectSocket member functions
 void CConnectSocket2::OnClose(int nErrorCode)
 {
-	((CZLabelPreviewSaveDlg*)AfxGetMainWnd())->Disconnect2ZEBRA();
+	//2017-07-06
+	ShutDown();
+	Close();
+	CSocket::OnClose(nErrorCode);
 }
 
 void CConnectSocket2::OnReceive(int nErrorCode)
@@ -168,6 +180,7 @@ void CConnectSocket2::OnReceive(int nErrorCode)
 			strLog.Format(_T("[RCV-ZEBRA] %s"),Buff);
 			pMain->DisplayLogSocket(strLog);
 			pMain->ParseZEBRAResponse(Buff);
+			pMain->Disconnect2ZEBRA(); //2017-07-14
 			
 		}
 	}

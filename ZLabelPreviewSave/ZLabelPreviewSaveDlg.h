@@ -62,7 +62,6 @@ DECLARE_EVENTSINK_MAP()
 	void	ProgressChangeExplorer(long Progress, long ProgressMax);
 	void	StatusTextChangeExplorer(LPCTSTR Text);
 	
-	void	  GoHome(void);
 	void	  SetClipboardText(CString &szData);
 	void	  GetClipboardText();
 
@@ -98,7 +97,6 @@ public:
 	HRESULT ZPL2ImgEx(); //2017-06-14 v2.0 TAB key -> SetCursorPos 
 
 // http
-	void ConnectZEBRA(); // http connect
 	void AddLogEvent(CString str); //WEB Browser
 
 	BOOL ReadConfigFile(); // \\ZPL2img.INI
@@ -107,7 +105,7 @@ public:
 	CString m_strZEBRA_IP, m_strZEBRA_Port, m_strDMS_IP, m_strDMS_Port;
 	CListBox m_ctlListEvent;
 
-	
+	void	  GoHome(void);
 
 // TCP/IP
 	CListBox m_ctlListSocket;
@@ -183,6 +181,16 @@ public:
 	void	ClickMouse(int parm_x, int parm_y, char parm_left_flag); 
 	//2017-06-09
 	int     m_nRectX,m_nRectY,m_nRectCX,m_nRectCY;
+	//2017-07-06
+	afx_msg void OnNcDestroy();
+	//2017-07-19
+	int  m_nZplToDo;
+	BOOL m_bInImgProcess;
+	//2017-07-20
+	int	 m_nRetryCheckTerm;
+	BOOL m_bZebraConnect;
+	//2017-07-24
+	void RecordZebraWaiting(BOOL bWaiting); //TRUE: 대기, FALSE: 대기해제
 };
 
 

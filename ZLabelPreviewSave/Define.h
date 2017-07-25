@@ -16,4 +16,10 @@
 //"ZBR5392525 - Print Label Confirmation"
 //[~HS]PaperOut:1/Pause:1...
 #define ERR03_R24   L"Print Label Confirmation" 
+//2017-07-06 nIDEvent naming
+#define TIMER_SAVE_IMAGE WM_USER+1
+#define TIMER_DMS_CONNECT WM_USER+2
+#define TIMER_ZEBRA_STATUS WM_USER+3
+#define TIMER_TIMEOUT WM_USER+4
+#define TIMER_RETRY_CHECK WM_USER+5
 
