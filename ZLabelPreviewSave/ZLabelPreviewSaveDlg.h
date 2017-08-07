@@ -142,7 +142,7 @@ public:
 	
 	//2016-10-25     
 	int		m_nZebraCheckTerm;
-	//int		m_nImgInMemoryLimit; - 2017-01-20 주석처리
+	int		m_nImgInMemoryLimit; //2017-01-20 주석처리 2017-07-31 복구
 	void    RecordZebraRecovery(BOOL bRecoveryEnd); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
 	void	StartMonitoringZEBRA();
 	void	StopMoniteringZEBRA();
