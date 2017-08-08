@@ -883,15 +883,17 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	
 	m_nStatus = 10;
 
-	//2016-10-25
-	m_nZebraCheckTerm = 10;
+	//m_nZebraCheckTerm = 10; //2016-10-25
+	m_nZebraCheckTerm = 5; //2017-08-07 default 5sec
+	
 	//2017-07-31 복구
-	m_nImgInMemoryLimit = 100; 
+	m_nImgInMemoryLimit = 300; //2017-08-07 default 300ea
 	 //2017-01-16
 	m_nSaveImageTerm = 3;
-	m_nDMS_ConnectTerm = 5;
-	//2017-01-18
-	m_nTimeOut = 10;
+	//m_nDMS_ConnectTerm = 5;
+	m_nDMS_ConnectTerm = 2; //2017-08-07 default 2sec
+	//m_nTimeOut = 10; //2017-01-18
+	m_nTimeOut = 5; //2017-08-07 default 5sec
 
 	//2016-10-27
 	m_bPauseMonitoringZEBRA = FALSE;
@@ -906,6 +908,8 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	//m_nRetryCheckTerm = 7;
 	m_nRetryCheckTerm = 25; //2017-07-28 변경
 	m_bZebraConnect = FALSE;
+	//2017-08-07 추가
+	m_bImgBreak = FALSE;
 }
 
 void CZLabelPreviewSaveDlg::DoDataExchange(CDataExchange* pDX)
@@ -1597,15 +1601,8 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 		GetLog()->Debug(strLog.GetBuffer());
 		AddLogEvent(Text);
 		//
-		//RecordExitTime();
-		//2017-01-31 변경
-		//PostMessage(WM_QUIT);  //프로그램 종료   
-		//EndDialog(IDOK);
-		//SetTimer(IDD+1234,100,NULL); //2017-06-28 변경
-		//RecordZebraWaiting(TRUE); //2017-07-24 Zebra 연결불안정 대기
-		//PostQuitMessage(0);//2017-07-11
-
 		Initialize(); //2017-07-28 변경 - ZEBRA web server 다운시 그냥 재부팅하기
+		
 	}
 }
 
@@ -1657,21 +1654,9 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 		GetLog()->Debug(strLog.GetBuffer());
 		AddLogEvent(Text);
 		
-		//2017-01-16 ZEBRA Down 상황 - 그냥 종료로 변경
-		//if(m_nStatus != 0)
-		//{
-		//	//2번시도..
-		//	PrepareNewZPL();
-		//	SetTimer(IDD+100,1000*10,NULL); //PrepareNewZPL
-		//}
-		//RecordExitTime();
-		//2017-01-31 변경
-		//PostMessage(WM_QUIT);  //프로그램 종료   
-		//EndDialog(IDOK);
-		//SetTimer(IDD+1234,100,NULL); //2017-06-28 변경
-		//RecordZebraWaiting(TRUE); //2017-07-24 Zebra 연결불안정 대기
-		//PostQuitMessage(0);//2017-07-11
 		Initialize(); //2017-07-28 변경 - ZEBRA web server 다운시 그냥 재부팅하기
+		
+		
 	}
 }
 
@@ -2285,7 +2270,8 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 	//
 	//Disconnect2ZEBRA(); 2017-07-14 주석처리 & 이동-> Send2Zebra()
 
-	int nImgInMemory = _wtoi(strNumOfImgInMemory);
+	//int nImgInMemory = _wtoi(strNumOfImgInMemory);
+	int nImgInMemory = _wtoi(m_strNumOfImgInMemory); //2017-08-07 변경
 	//if(strPaperOut != L"0" || strPauseFlag != L"0" || nImgInMemory > m_nImgInMemoryLimit ) //
 	if(strPaperOut != L"0" || strPauseFlag != L"0" ) //2017-01-20 REBOOT 조건 변경
 	{
@@ -2317,15 +2303,16 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 					}
 					//2017-01-31 변경
 					//PostMessage(WM_QUIT);  //프로그램 종료   
-					EndDialog(IDOK);
+					//EndDialog(IDOK);
+					PostQuitMessage(0);
 					break;
 				}
 				Sleep(50);
 			}	
 		}
 	}
-	//2017-07-31 REBOOT 조건 추가. TO-DO 자재없는 조건 하계휴가 후 추가
-	else if(nImgInMemory > m_nImgInMemoryLimit && m_bInImgProcess == FALSE && m_bDMSconnected == TRUE && m_bZebraConnect == TRUE) 
+	//2017-07-31 REBOOT 조건 추가. TO-DO 자재없는 조건 하계휴가 후 추가 //2017-08-07 m_bImgBreak == TRUE 추가
+	else if(nImgInMemory > m_nImgInMemoryLimit && m_bInImgProcess == FALSE && m_bDMSconnected == TRUE && m_bZebraConnect == TRUE && m_bImgBreak == TRUE) 
 	{
 		int nRet = SendToDMS(L"REBOOT");
 		if(nRet > 0 )
@@ -2513,41 +2500,41 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtRebootZebra()
 	}
 }
 
-//2017-01-23
+//2017-01-23 //2017-08-08 수정
 void CZLabelPreviewSaveDlg::Initialize()
 {
 	CString strLog = L"";
-	int nRet = SendToDMS(L"REBOOT");
-	if(nRet > 0 )
+	if(m_bDMSconnected == TRUE && m_bZebraConnect == TRUE) //2017-08-08 조건추가
 	{
+		int nRet = SendToDMS(L"REBOOT");
 		Disconnect2DMS();
 		m_bPauseMonitoringZEBRA = TRUE;
 
-		for (int i=0; i < 5; i++) //재부팅 확실하게 5번 시도
+		for (int i=0; i < 5; i++) //재부팅 확실하게 -_-
 		{
 			nRet = SendToZEBRA(L"~JR"); // ~JR : Power On Reset
 		
 			if(nRet == 4) //~JR(null)  //2016-11-02
 			{
 				strLog.Format(L"[REBOOT ZEBRA] Initialize() NumOfImgInMemory:%s | SendToZEBRA(~JR) - %d", 
-								 m_strNumOfImgInMemory, nRet);
+									m_strNumOfImgInMemory, nRet);
 				GetLog()->Debug(strLog.GetBuffer());
 
 				RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
-				//RecordExitTime();
 				//2017-01-25
 				if(_wtoi(m_strNumOfImgInMemory) > m_nMaxImgCnt)
 				{
 					RecordMaxImgCount(m_strNumOfImgInMemory);
 				}
-				//2017-01-31 변경
-				//PostMessage(WM_QUIT);  //프로그램 종료   
-				//EndDialog(IDOK);
 				PostQuitMessage(0); //2017-07-12
 				break;
 			}
 			Sleep(50);
 		}
+	}
+	else
+	{
+		PostQuitMessage(0);
 	}
 }
 

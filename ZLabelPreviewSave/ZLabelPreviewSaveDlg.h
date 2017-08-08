@@ -191,6 +191,8 @@ public:
 	BOOL m_bZebraConnect;
 	//2017-07-24
 	void RecordZebraWaiting(BOOL bWaiting); //TRUE: 대기, FALSE: 대기해제
+	//2017-08-07
+	BOOL m_bImgBreak;
 };
 
 

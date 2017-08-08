@@ -62,7 +62,7 @@ void CConnectSocket::OnReceive(int nErrorCode)
 		pMain->DisplayLogSocket(strLog);
 
 		//if(strRcv != L"RESET" && strRcv.Left(4) != L"TIME" ) //2016-10-17
-		if(strRcv != L"RESET" && strRcv.Left(4) != L"TIME" && strRcv != L"INITIALIZE" ) //2017-01-23
+		if(strRcv != L"RESET" && strRcv.Left(4) != L"TIME" && strRcv != L"INITIALIZE" && strRcv != L"IMAGE_BREAK") //2017-01-23 //2017-08-07 IMAGE_BREAK 추가
 		{
 			m_strRcvZPL = strRcv;
 		}
@@ -78,12 +78,20 @@ void CConnectSocket::OnReceive(int nErrorCode)
 			CSocket::OnReceive(nErrorCode);
 			return;
 		}
-		else if(strRcv == L"INITIALIZE") //2017-01-23
+		else if(strRcv == L"INITIALIZE") //2017-01-23  사용안함.(장비초기화시 사용할지 모르나, 가능성 희박)
 		{
 			pMain->Initialize();
 			CSocket::OnReceive(nErrorCode);
 			return;
 		}
+		else if(strRcv == L"IMAGE_BREAK") //2017-08-07
+		{
+			pMain->m_bImgBreak = TRUE;
+			CSocket::OnReceive(nErrorCode);
+			return;
+		}
+
+		pMain->m_bImgBreak = FALSE; //2017-08-07
 
 		int nIdx = m_strRcvZPL.Find(L"^XA"); 
 		int nIdx2 = m_strRcvZPL.Find(L"^XZ");
