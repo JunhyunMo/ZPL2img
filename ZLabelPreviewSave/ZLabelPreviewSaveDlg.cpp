@@ -1676,14 +1676,14 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 	else if(nIDEvent == TIMER_TIMEOUT)
 	{
-		CString strLog = L"[TIMEOUT]";
-		
 		if(m_strPrevZPL == m_strZPL)
-		{
+		{	
+			m_IExplorer.Stop();
+			CString strLog  = L"[TIMEOUT] (m_strPrevZPL == m_strZPL) m_IExplorer.Stop()"; 
 			GetLog()->Debug(strLog.GetBuffer());
-			//Retry(); //2017-01-18
-			//SetTimer(IDD+1234,100,NULL); //2017-06-29 변경
-			PostQuitMessage(0);//2017-07-11
+		
+			RecordZebraWaiting(TRUE); //2017-08-09 Zebra 연결불안정 대기
+		    PostQuitMessage(0); 
 		}
 		else 
 		{
@@ -2074,9 +2074,11 @@ BOOL CZLabelPreviewSaveDlg::Connect2ZEBRA(CString strZebraIP, UINT nPort) // TCP
 		GetLog()->Debug(strLog.GetBuffer());
 		DisplayLogSocket(strLog);
 
-		m_bZebraConnect = FALSE; //2017-07-20
-		RecordZebraWaiting(TRUE); //2017-07-24 Zebra 연결불안정 대기
-		PostQuitMessage(0);  //2017-07-11  
+		//2017-08-09 변경 -> Initialize()
+		//m_bZebraConnect = FALSE; //2017-07-20
+		//RecordZebraWaiting(TRUE); //2017-07-24 Zebra 연결불안정 대기
+		//PostQuitMessage(0);  //2017-07-11  
+		Initialize(); //2017-08-09 v2.43
 //
 		return FALSE;
 	}
