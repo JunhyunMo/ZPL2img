@@ -1584,7 +1584,7 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 		GetLog()->Debug(strLog.GetBuffer());
 		AddLogEvent(Text);
 		//
-		Initialize(); //2017-07-28 변경 - ZEBRA web server 다운시 그냥 재부팅하기
+		Initialize(); //2017-07-28 변경 - ZEBRA web server 다운시 그냥 재부팅하기 - //2017-08-11 ZEBRA connect fail시 재부팅 안됨. term 두고 재접속 시도. Initialize() 수정 v2.45
 		
 	}
 }
@@ -1634,7 +1634,7 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 		GetLog()->Debug(strLog.GetBuffer());
 		AddLogEvent(Text);
 		
-		Initialize(); //2017-07-28 변경 - ZEBRA web server 다운시 그냥 재부팅하기
+		Initialize(); //2017-07-28 변경 - ZEBRA web server 다운시 그냥 재부팅하기 //2017-08-11 ZEBRA connect fail시 재부팅 안됨. term 두고 재접속 시도. Initialize() 수정 v2.45
 		
 		
 	}
@@ -2468,7 +2468,12 @@ void CZLabelPreviewSaveDlg::Initialize()
 	}
 	else
 	{
-		PostQuitMessage(0);
+		//2017-08-11
+		strLog  = L"[FAIL] INITIALIZE() (m_bDMSconnected != TRUE || m_bZebraConnect != TRUE)"; 
+		GetLog()->Debug(strLog.GetBuffer());
+		
+		RecordZebraWaiting(TRUE);
+		PostQuitMessage(0); 
 	}
 }
 
