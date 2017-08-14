@@ -906,6 +906,7 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	m_bZebraConnect = FALSE;
 	//2017-08-07 추가
 	m_bImgBreak = FALSE;
+	m_nRetryCheckOnceTerm = 7; //2017-08-14
 }
 
 void CZLabelPreviewSaveDlg::DoDataExchange(CDataExchange* pDX)
@@ -1036,6 +1037,9 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 	//2017-06-08
 	GetDlgItem(IDC_BT_AIM)->MoveWindow(m_nRectX,m_nRectY,m_nRectCX,m_nRectCY);
 	
+	nElapse = m_nRetryCheckOnceTerm * 1000;
+	SetTimer(TIMER_RETRY_CHECK_ONCE,nElapse,NULL); //2017-08-14
+
 	nElapse = m_nRetryCheckTerm * 1000;
 	SetTimer(TIMER_RETRY_CHECK,nElapse,NULL); //2017-07-20
 
@@ -1462,6 +1466,11 @@ BOOL CZLabelPreviewSaveDlg::ReadConfigFile() // \\ZPL2img.INI
 	if (GetPrivateProfileString(L"ZEBRA", L"RETRY_CHECK_TERM", L"", szValue, sizeof(szValue), strPath))
 		m_nRetryCheckTerm = _wtoi(szValue);
 	//
+	//2017-08-14
+	ZeroMemory(szValue, 0xFF);
+	if (GetPrivateProfileString(L"ZEBRA", L"RETRY_CHECK_ONCE_TERM", L"", szValue, sizeof(szValue), strPath))
+		m_nRetryCheckOnceTerm = _wtoi(szValue);
+	//
 	ZeroMemory(szValue, 0xFF);
 	if (GetPrivateProfileString(L"DMS", L"DMS_IP", L"", szValue, sizeof(szValue), strPath))
 		m_strDMS_IP = szValue;
@@ -1693,7 +1702,17 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 	else if(nIDEvent == TIMER_RETRY_CHECK) //2017-07-20
 	{
 		//if(m_nZplToDo > 0 && m_bInImgProcess == FALSE && m_bDMSconnected == TRUE && m_bZebraConnect == TRUE) //m_nZplToDo - ( 1 or 0 )
-		if(m_bInImgProcess == FALSE && m_bDMSconnected == TRUE && m_bZebraConnect == TRUE) //2017-07-28 누락이미지 방지차원 조건 변경. Timer간격도 25sec 늘림.
+		if(m_bInImgProcess == FALSE && m_bDMSconnected == TRUE && m_bZebraConnect == TRUE) //2017-07-28 누락이미지 방지차원 조건 변경. 
+		{
+			SendToDMS(L"RETRY");
+			SetFocusOnWebCtrl();
+		}
+	}
+	else if(nIDEvent == TIMER_RETRY_CHECK_ONCE) //2017-08-14 v2.451 추가
+	{
+		KillTimer(TIMER_RETRY_CHECK_ONCE);
+
+		if(m_bInImgProcess == FALSE && m_bDMSconnected == TRUE && m_bZebraConnect == TRUE) //
 		{
 			SendToDMS(L"RETRY");
 			SetFocusOnWebCtrl();
@@ -1834,7 +1853,7 @@ void CZLabelPreviewSaveDlg::Connect2DMS(CString strIP,UINT nPort)
 
 		//2017-01-18
 		SendToDMS(L"TIME"); //TIMESYNC
-		Retry(); //한번 시도 - 누락이미지 확인
+		//Retry(); //한번 시도 - 누락이미지 확인 //2017-08-14 막음
 	}
 }
 
