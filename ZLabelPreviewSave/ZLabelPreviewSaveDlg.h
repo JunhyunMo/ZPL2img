@@ -84,7 +84,7 @@ public:
 	void	Unicode2MBCS(LPWSTR lpData,LPSTR lpRtd);
 	void	ProcessStart();
 
-	int		m_nStatus; //0:home, 1:ZPL preview, 2: SaveEnd
+	int		m_nPageStatus; //2017-09-18 home(Edit Script)/end(Preview Label) page(url) 2가지로 정리 
 	CString	m_strTitle, m_strStatusText;
 	long	m_nProgress, m_nProgressMax;
 
@@ -93,7 +93,7 @@ public:
 	void	EnterKey(CWnd* pWnd);
 	void	PrepareNewZPL();
 //
-	HRESULT ZPL2Img(); //2017-01-18 수정 return HRESULT
+	//HRESULT ZPL2Img(); //2017-01-18 수정 return HRESULT //2017-09-18 정리
 	HRESULT ZPL2ImgEx(); //2017-06-14 v2.0 TAB key -> SetCursorPos 
 
 // http
@@ -109,7 +109,7 @@ public:
 
 // TCP/IP
 	CListBox m_ctlListSocket;
-	CString  m_strFileName;
+	//CString  m_strFileName;
 	BOOL	 m_bDMSconnected;
 
 	void DisplayLogSocket(CString str);
@@ -194,6 +194,11 @@ public:
 	//2017-08-07
 	BOOL m_bImgBreak;
 	int	 m_nRetryCheckOnceTerm; //2017-08-14
+	// V2.46 2017-09-18
+	CString m_strImgFileName; 
+	double m_doubleNotiImageFileTerm;
+	void SetURL();
+	void LogPassZPL(CString str);
 };
 
 

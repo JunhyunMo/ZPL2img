@@ -100,12 +100,23 @@ void CConnectSocket::OnReceive(int nErrorCode)
 			//2017-07-19 Ãß°¡ - !!!
 			pMain->m_nZplToDo = 1;
 			//2017-01-18
+			/*if(pMain->m_strZPL == L"")
+			{
+				pMain->m_strZPL = m_strRcvZPL;
+			}
+			else
+			{
+				CSocket::OnReceive(nErrorCode);
+				return;
+			}*/
+			//V2.46 2017-09-19
 			if(pMain->m_strZPL == L"")
 			{
 				pMain->m_strZPL = m_strRcvZPL;
 			}
 			else
 			{
+				pMain->LogPassZPL(m_strRcvZPL);
 				CSocket::OnReceive(nErrorCode);
 				return;
 			}

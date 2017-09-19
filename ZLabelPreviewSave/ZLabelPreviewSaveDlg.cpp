@@ -869,7 +869,7 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	//m_strEndUrl = _T("http://192.168.1.120/zpl");
 
 	//status
-	m_nStatus = -1;
+	m_nPageStatus = -1;
 	m_strTitle = L"";
 	m_strStatusText = L"";
 	m_nProgress = -1; 
@@ -881,8 +881,6 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 
 	m_bDMSconnected = FALSE;
 	
-	m_nStatus = 10;
-
 	m_nZebraCheckTerm = 5; //2017-08-07 default 5sec
 	
 	//2017-07-31 복구
@@ -907,6 +905,7 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	//2017-08-07 추가
 	m_bImgBreak = FALSE;
 	m_nRetryCheckOnceTerm = 7; //2017-08-14
+	m_doubleNotiImageFileTerm = 1.5; //2017-09-19
 }
 
 void CZLabelPreviewSaveDlg::DoDataExchange(CDataExchange* pDX)
@@ -1017,6 +1016,7 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 		((CComboBox*)GetDlgItem(IDC_CB_ZPL))->AddString(str);
 	}
 
+	SetURL(); //2017-09-18
 	GoHome(); 
 	
 	//2017-07-06
@@ -1182,51 +1182,51 @@ BOOL CZLabelPreviewSaveDlg::CheckZPL(CString strZPL)
 		return TRUE;
 }
 
-HRESULT CZLabelPreviewSaveDlg::ZPL2Img()
-{
-	if(m_strZPL.GetLength() <= 0)
-	{
-		CString strLog = L"[ERROR] m_strZPL.GetLength() <= 0"; //2016-11-01 
-		GetLog()->Debug(strLog.GetBuffer());
-
-		Retry(); //2017-01-18
-
-		return S_FALSE;
-	}
-
-	if(CheckZPL(m_strZPL) == FALSE) //2017-01-08
-	{
-		CString strLog;
-		strLog.Format(L"[ERROR] CheckZPL(...) == FALSE\r\n[m_strZPL]%s",m_strZPL); 
-		GetLog()->Debug(strLog.GetBuffer());
-		
-		Retry(); //2017-01-18
-
-		return S_FALSE;
-	}
-
-	CString strLog;
-	SetClipboardText(m_strZPL);
-
-	SetFocusOnWebCtrl(); //2016-10-26
-
-	GetClipboardText();
-
-	SetForegroundWindow();
-	TabKey(GetDlgItem(IDC_EXPLORER));
-
-	SetForegroundWindow();
-	TabKey(GetDlgItem(IDC_EXPLORER));
-	CtrlV(GetDlgItem(IDC_EXPLORER));
-	
-	SetForegroundWindow();
-	TabKey(GetDlgItem(IDC_EXPLORER));
-
-	SetForegroundWindow();
-	EnterKey(GetDlgItem(IDC_EXPLORER));
-
-	return S_OK;
-}
+//HRESULT CZLabelPreviewSaveDlg::ZPL2Img()
+//{
+//	if(m_strZPL.GetLength() <= 0)
+//	{
+//		CString strLog = L"[ERROR] m_strZPL.GetLength() <= 0"; //2016-11-01 
+//		GetLog()->Debug(strLog.GetBuffer());
+//
+//		Retry(); //2017-01-18
+//
+//		return S_FALSE;
+//	}
+//
+//	if(CheckZPL(m_strZPL) == FALSE) //2017-01-08
+//	{
+//		CString strLog;
+//		strLog.Format(L"[ERROR] CheckZPL(...) == FALSE\r\n[m_strZPL]%s",m_strZPL); 
+//		GetLog()->Debug(strLog.GetBuffer());
+//		
+//		Retry(); //2017-01-18
+//
+//		return S_FALSE;
+//	}
+//
+//	CString strLog;
+//	SetClipboardText(m_strZPL);
+//
+//	SetFocusOnWebCtrl(); //2016-10-26
+//
+//	GetClipboardText();
+//
+//	SetForegroundWindow();
+//	TabKey(GetDlgItem(IDC_EXPLORER));
+//
+//	SetForegroundWindow();
+//	TabKey(GetDlgItem(IDC_EXPLORER));
+//	CtrlV(GetDlgItem(IDC_EXPLORER));
+//	
+//	SetForegroundWindow();
+//	TabKey(GetDlgItem(IDC_EXPLORER));
+//
+//	SetForegroundWindow();
+//	EnterKey(GetDlgItem(IDC_EXPLORER));
+//
+//	return S_OK;
+//}
 
 HRESULT CZLabelPreviewSaveDlg::ZPL2ImgEx() //2017-06-14 v2.0 TAB key -> SetCursorPos 
 {
@@ -1337,11 +1337,12 @@ void CZLabelPreviewSaveDlg::NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 
 	if(strCurUrl.Left(30) == m_strHomeUrl)
 	{
-		m_nStatus = 0;
+		m_nPageStatus = 0;
+		GetDlgItem(IDC_BT_AIM)->ShowWindow(SW_SHOW); //V2.46 2017-09-18
 	}
 	else if(strCurUrl == m_strEndUrl) 
 	{
-		m_nStatus = 1;
+		m_nPageStatus = 1;
 
 		//2017-01-16
 		int nElapse = m_nSaveImageTerm * 1000; //default 3sec
@@ -1349,7 +1350,7 @@ void CZLabelPreviewSaveDlg::NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 	}
 	else if(strCurUrl.Left(30) != m_strHomeUrl && strCurUrl != m_strEndUrl)
 	{
-		m_nStatus = -1;
+		m_nPageStatus = -1;
 	}
 }
 
@@ -1483,6 +1484,10 @@ BOOL CZLabelPreviewSaveDlg::ReadConfigFile() // \\ZPL2img.INI
 	ZeroMemory(szValue, 0xFF);
 	if (GetPrivateProfileString(L"DMS", L"DMS_CONNECT_TERM", L"", szValue, sizeof(szValue), strPath))
 		m_nDMS_ConnectTerm = _wtoi(szValue);
+	//2017-09-18
+	ZeroMemory(szValue, 0xFF);
+	if (GetPrivateProfileString(L"ZEBRA", L"NOTI_IMAGE_FILE_TERM", L"", szValue, sizeof(szValue), strPath))
+		m_doubleNotiImageFileTerm = _wtof(szValue);
 
 	return TRUE;
 }
@@ -1512,21 +1517,20 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtEventClear()
 	}
 	SetFocusOnWebCtrl();	
 }
+//2017-09-18
+void CZLabelPreviewSaveDlg::SetURL()
+{
+	SetDlgItemText(IDC_ZEBRA_IPADDR, m_strZEBRA_IP );
+
+	m_strHomeUrl.Format(L"http://%s/printer/zpl%20post?dev=R&oname=UNKNOWN&otype=ZPL&pw=&data=",m_strZEBRA_IP); //2015-12-02 external print server
+	m_strEndUrl.Format(_T("http://%s"),m_strZEBRA_IP);
+	m_strEndUrl += _T("/printer/zpl"); //2015-12-02 external print server
+}
 
 void CZLabelPreviewSaveDlg::GoHome() // http
 {
-	CString strIP = L"";
-
-	strIP = m_strZEBRA_IP;
-
-	SetDlgItemText(IDC_ZEBRA_IPADDR, strIP );
-
-	m_strHomeUrl.Format(L"http://%s/printer/zpl%20post?dev=R&oname=UNKNOWN&otype=ZPL&pw=&data=",strIP); //2015-12-02 external print server
-	m_strEndUrl.Format(_T("http://%s"),strIP);
-	m_strEndUrl += _T("/printer/zpl"); //2015-12-02 external print server
-
 	m_IExplorer.Navigate(m_strHomeUrl,NULL,NULL,NULL,NULL);
-	GetDlgItem(IDC_BT_AIM)->ShowWindow(SW_SHOW); //2017-06-14
+	//GetDlgItem(IDC_BT_AIM)->ShowWindow(SW_SHOW); //2017-06-14
 }
 
 void CZLabelPreviewSaveDlg::ProcessStart()
@@ -1586,7 +1590,7 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 	{
 		m_IExplorer.Stop(); //2017-07-06
 
-		m_nStatus = -100; //Page err
+		m_nPageStatus = -100; //Page err
 		
 		//2016-10-21 
 		strLog.Format(L"[ERROR] TitleChangeExplorer - %s m_IExplorer.Stop()",Text);
@@ -1600,34 +1604,33 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 
 void CZLabelPreviewSaveDlg::ProgressChangeExplorer(long Progress, long ProgressMax)
 {
-	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
-	m_nProgress = Progress;
-	m_nProgressMax = ProgressMax;
+	//2017-09-18 정리
+	//m_nProgress = Progress;
+	//m_nProgressMax = ProgressMax;
 
-	if(m_nProgress > 0 || m_nProgressMax > 0)
-	{
-		m_nStatus = -1;
-	}
-	else if(m_nProgress == 0 && m_nProgressMax == 0)
-	{
-		if(m_strTitle.Right(15) == OK_R15)
-		{
-			m_nStatus = 0;
-		}
-		else if(m_strTitle.Right(13) ==OK_R13)
-		{
-			m_nStatus = 1;
-		}
-		else if(m_strTitle.Right(24) == NG_R24)
-		{
-			;
-		}
-	}
-	else if(Progress == 10000 && ProgressMax == 10000) //2015-12-10
-	{
-		;
-	}
-	
+	//if(m_nProgress > 0 || m_nProgressMax > 0)
+	//{
+	//	m_nPageStatus = -1;
+	//}
+	//else if(m_nProgress == 0 && m_nProgressMax == 0)
+	//{
+	//	if(m_strTitle.Right(15) == OK_R15)
+	//	{
+	//		m_nPageStatus = 0;
+	//	}
+	//	else if(m_strTitle.Right(13) ==OK_R13)
+	//	{
+	//		m_nPageStatus = 1;
+	//	}
+	//	else if(m_strTitle.Right(24) == NG_R24)
+	//	{
+	//		m_nPageStatus = -1;
+	//	}
+	//}
+	//else if(Progress == 10000 && ProgressMax == 10000) //2015-12-10
+	//{
+	//	;
+	//}
 }
 
 void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
@@ -1655,7 +1658,7 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 	if(nIDEvent == TIMER_SAVE_IMAGE)
 	{
 		//2015-09-11
-		if( m_strTitle.Right(13) != L"Preview Label" || m_nStatus != 1 ) 
+		if( m_strTitle.Right(13) != L"Preview Label" || m_nPageStatus != 1 ) 
 		{
 			return;
 		}
@@ -1718,7 +1721,22 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 			SetFocusOnWebCtrl();
 		}
 	}
+	//2017-09-19
+	else if(nIDEvent == TIMER_NOTI_IMAGE_FILE) 
+	{
+		KillTimer(TIMER_NOTI_IMAGE_FILE);
 
+		CString strPacket;
+		strPacket.Format(L"01IS%04d|%s|",m_strImgFileName.GetLength()+10,m_strImgFileName);
+		
+		if(SendToDMS(strPacket) > 0)
+		{
+			m_nZplToDo = 0;
+			m_bInImgProcess = FALSE;
+		}
+		
+	}	
+	//
 	CDialogEx::OnTimer(nIDEvent);
 }
 
@@ -1742,34 +1760,47 @@ void CZLabelPreviewSaveDlg::SaveImage()
 	//BitBlt(hDC, 0, 400, m_Rect.right, m_Rect.bottom-400, DeskTopDC.m_hDC, 0, 400, SRCCOPY);
 
 	CString strPath;
-	CString strFileName;
-	strFileName.Format(L"%s.png",GetCurTime());
-	strPath.Format(_T("D:\\Label\\%s.png"),GetCurTime()); 
-	//strPath.Format(_T("D:\\Label\\%s.png"), m_strFileName);
+	//CString strFileName;
+	m_strImgFileName.Format(L"%s.png",GetCurTime());
+	//strPath.Format(_T("D:\\Label\\%s.png"),GetCurTime()); 
+	strPath.Format(_T("D:\\Label\\%s"), m_strImgFileName);
 
 	CString strLog,strTemp;
 	HRESULT HResult = m_Image.Save(strPath, Gdiplus::ImageFormatPNG);
+
+	//2017-09-18 [TIMEOUT] 에러 방지 : 이미지 파일저장했으면 ZPL 초기화
+	if(HResult == S_OK )
+	{
+		m_strZPL = L"";
+		UpdateData(FALSE); 
+	}
+	//
+
 	strTemp = GetMessageForHResult(HResult); //
-	strLog.Format(L"%s %s [m_nProgress = %d]",strTemp,strFileName,m_nProgress);//2017-02-03 m_nProgress 추가
+	//strLog.Format(L"%s %s [m_nProgress = %d]",strTemp,strFileName,m_nProgress);//2017-02-03 m_nProgress 추가
+	strLog.Format(L"%s %s [m_nProgress = %d]",strTemp, m_strImgFileName, m_nProgress);
 	GetLog()->Debug(strLog.GetBuffer());
 
 	m_Image.ReleaseDC();
 	m_Image.Destroy();
 
-	m_nStatus = 3;
 	//////////////////////////////////////////////////////
+//V2.50 2017-09-18
+	//CString strPacket;
+	//strPacket.Format(L"01IS%04d|%s|",strFileName.GetLength()+10,strFileName);
+	// //2017-07-19
+	//if(SendToDMS(strPacket) > 0)
+	//{
+	//	m_nZplToDo = 0;
+	//	m_bInImgProcess = FALSE;
+	//}
+	////
 
-	CString strPacket;
-	strPacket.Format(L"01IS%04d|%s|",strFileName.GetLength()+10,strFileName);
-	 //2017-07-19
-	if(SendToDMS(strPacket) > 0)
-	{
-		m_nZplToDo = 0;
-		m_bInImgProcess = FALSE;
-	}
-	//
-
-	PrepareNewZPL();
+	//PrepareNewZPL();
+	GoHome();
+	double nElapse = m_doubleNotiImageFileTerm * 1000;
+	SetTimer(TIMER_NOTI_IMAGE_FILE,(int)nElapse,NULL);
+	
 }
 
 
@@ -1929,7 +1960,14 @@ void CZLabelPreviewSaveDlg::LogRcvDMS(CString str)
 	strLog.Format(_T("[RCV-DMS] %s"),str);
 	GetLog()->Debug(strLog.GetBuffer());
 }
-
+//2017-09-18
+void CZLabelPreviewSaveDlg::LogPassZPL(CString str)
+{
+	CString strLog;
+	strLog.Format(_T("[PASS][RCV-DMS] %s"),str);
+	GetLog()->Debug(strLog.GetBuffer());
+}
+//
 void CZLabelPreviewSaveDlg::LogSend2DMS(CString str)
 {
 	CString strLog;
