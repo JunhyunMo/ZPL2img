@@ -199,6 +199,8 @@ public:
 	double m_doubleNotiImageFileTerm;
 	void SetURL();
 	void LogPassZPL(CString str);
+	//2017-09-28
+	CString m_strImageFileFormat;
 };
 
 

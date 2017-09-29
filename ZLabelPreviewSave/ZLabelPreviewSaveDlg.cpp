@@ -906,6 +906,8 @@ CZLabelPreviewSaveDlg::CZLabelPreviewSaveDlg(CWnd* pParent /*=NULL*/)
 	m_bImgBreak = FALSE;
 	m_nRetryCheckOnceTerm = 7; //2017-08-14
 	m_doubleNotiImageFileTerm = 1.5; //2017-09-19
+
+	m_strImageFileFormat = L"png";
 }
 
 void CZLabelPreviewSaveDlg::DoDataExchange(CDataExchange* pDX)
@@ -1004,6 +1006,8 @@ BOOL CZLabelPreviewSaveDlg::OnInitDialog()
 
 	SetDlgItemInt(IDC_EDIT_IMG_LIMIT,m_nImgInMemoryLimit);
 	SetDlgItemText(IDC_EDIT_IMG_NO,m_strNumOfImgInMemory); //2017-01-20
+
+	SetDlgItemText(IDC_EDIT_IMG_FILE_FORMAT,m_strImageFileFormat); //2017-09-28
 
 	m_ctlCbZpl.SetCurSel(0);
 
@@ -1488,6 +1492,10 @@ BOOL CZLabelPreviewSaveDlg::ReadConfigFile() // \\ZPL2img.INI
 	ZeroMemory(szValue, 0xFF);
 	if (GetPrivateProfileString(L"ZEBRA", L"NOTI_IMAGE_FILE_TERM", L"", szValue, sizeof(szValue), strPath))
 		m_doubleNotiImageFileTerm = _wtof(szValue);
+	//2017-09-28
+	ZeroMemory(szValue, 0xFF);
+	if (GetPrivateProfileString(L"ZEBRA", L"IMAGE_FILE_FORMAT", L"", szValue, sizeof(szValue), strPath))
+		m_strImageFileFormat = szValue;
 
 	return TRUE;
 }
@@ -1761,12 +1769,25 @@ void CZLabelPreviewSaveDlg::SaveImage()
 
 	CString strPath;
 	//CString strFileName;
-	m_strImgFileName.Format(L"%s.png",GetCurTime());
+	//m_strImgFileName.Format(L"%s.png",GetCurTime());
+	m_strImgFileName.Format(L"%s.%s",GetCurTime(),m_strImageFileFormat); //2017-09-28
 	//strPath.Format(_T("D:\\Label\\%s.png"),GetCurTime()); 
 	strPath.Format(_T("D:\\Label\\%s"), m_strImgFileName);
 
 	CString strLog,strTemp;
-	HRESULT HResult = m_Image.Save(strPath, Gdiplus::ImageFormatPNG);
+	//HRESULT HResult = m_Image.Save(strPath, Gdiplus::ImageFormatPNG);
+	//2017-09-28
+	HRESULT HResult;
+	if(m_strImageFileFormat == L"png") 
+		HResult = m_Image.Save(strPath, Gdiplus::ImageFormatPNG);
+	else if(m_strImageFileFormat == L"bmp") 
+		HResult = m_Image.Save(strPath, Gdiplus::ImageFormatBMP);
+	else if(m_strImageFileFormat == L"jpg" || m_strImageFileFormat == L"jpeg") 
+		HResult = m_Image.Save(strPath, Gdiplus::ImageFormatJPEG);
+	else if(m_strImageFileFormat == L"gif" || m_strImageFileFormat == L"jpeg") 
+		HResult = m_Image.Save(strPath, Gdiplus::ImageFormatGIF);
+	else
+		HResult = m_Image.Save(strPath, Gdiplus::ImageFormatPNG);
 
 	//2017-09-18 [TIMEOUT] 에러 방지 : 이미지 파일저장했으면 ZPL 초기화
 	if(HResult == S_OK )
