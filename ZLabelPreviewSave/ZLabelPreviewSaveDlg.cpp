@@ -1604,9 +1604,10 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 		strLog.Format(L"[ERROR] TitleChangeExplorer - %s m_IExplorer.Stop()",Text);
 		GetLog()->Debug(strLog.GetBuffer());
 		AddLogEvent(Text);
-		//
-		Initialize(); //2017-07-28 변경 - ZEBRA web server 다운시 그냥 재부팅하기 - //2017-08-11 ZEBRA connect fail시 재부팅 안됨. term 두고 재접속 시도. Initialize() 수정 v2.45
-		
+
+		//2017-12-04 변경
+		RebootZebraByUSB();
+		PostQuitMessage(0);
 	}
 }
 
@@ -1654,8 +1655,9 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 		GetLog()->Debug(strLog.GetBuffer());
 		AddLogEvent(Text);
 		
-		Initialize(); //2017-07-28 변경 - ZEBRA web server 다운시 그냥 재부팅하기 //2017-08-11 ZEBRA connect fail시 재부팅 안됨. term 두고 재접속 시도. Initialize() 수정 v2.45
-		
+		//2017-12-04 변경
+		RebootZebraByUSB();
+		PostQuitMessage(0);
 		
 	}
 }
@@ -2404,7 +2406,9 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtEmergency() // 2016-10-26
 	strLog = L"OnBnClickedBtEmergency()";
 	GetLog()->Debug(strLog.GetBuffer());
 
-	Retry(); //2017-01-18
+	//2017-12-04 변경
+	RebootZebraByUSB();
+	PostQuitMessage(0);
 }
 
 void CZLabelPreviewSaveDlg::SetFocusOnWebCtrl()
@@ -2477,39 +2481,13 @@ void CZLabelPreviewSaveDlg::Retry()
 	SendToDMS(L"RETRY");
 	SetFocusOnWebCtrl();
 }
-//2017-01-21
+//2017-01- - 2017-12-04 변경
 void CZLabelPreviewSaveDlg::OnBnClickedBtRebootZebra()
 {
-	CString strLog = L"";
-	int nRet = SendToDMS(L"REBOOT");
-	if(nRet > 0 )
-	{
-		Disconnect2DMS();
-		m_bPauseMonitoringZEBRA = TRUE;
-
-		for (int i=0; i < 5; i++) //재부팅 확실하게
-		{
-			nRet = SendToZEBRA(L"~JR"); // ~JR : Power On Reset
-		
-			if(nRet == 4) //~JR(null)  //2016-11-02
-			{
-				strLog.Format(L"[REBOOT ZEBRA] OnBnClickedBtRebootZebra() NumOfImgInMemory:%s | SendToZEBRA(~JR) - %d", 
-								 m_strNumOfImgInMemory, nRet);
-				GetLog()->Debug(strLog.GetBuffer());
-
-				RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
-				//2017-01-25
-				if(_wtoi(m_strNumOfImgInMemory) > m_nMaxImgCnt)
-				{
-					RecordMaxImgCount(m_strNumOfImgInMemory);
-				}
-				
-				EndDialog(IDOK);
-				break;
-			}
-			Sleep(50);
-		}
-	}
+	CString strLog = L"OnBnClickedBtRebootZebra()";
+	GetLog()->Debug(strLog.GetBuffer());
+	RebootZebraByUSB();
+	PostQuitMessage(0);
 }
 
 //2017-01-23 //2017-08-08 수정
@@ -2549,7 +2527,7 @@ void CZLabelPreviewSaveDlg::Initialize()
 		//2017-08-11
 		strLog  = L"[FAIL] INITIALIZE() (m_bDMSconnected != TRUE || m_bZebraConnect != TRUE)"; 
 		GetLog()->Debug(strLog.GetBuffer());
-		
+		//2017-12-05 MJH To-Do
 		RecordZebraWaiting(TRUE);
 		PostQuitMessage(0); 
 	}
@@ -2587,4 +2565,51 @@ void CZLabelPreviewSaveDlg::OnNcDestroy()
 	CDialogEx::OnNcDestroy();
 
 	RecordExitTime();
+}
+
+//2017-12-04 추가
+void CZLabelPreviewSaveDlg::RebootZebraByUSB()
+{
+	CString strLog;
+
+	HANDLE hOutputFile = CreateFile ( _T("Reboot.txt"), 
+
+									   GENERIC_WRITE, FILE_SHARE_WRITE, NULL, 
+
+										CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+
+ 
+	if ( hOutputFile != INVALID_HANDLE_VALUE )
+	{
+
+	   DWORD dwWritten;
+
+	   BOOL bSuccess = FALSE;
+
+  
+	   //BOM(ByteOrderMask), LE(LittleEndian)
+	   char bom[] = { 0xFF, 0xFE, };
+
+	   bSuccess = WriteFile(hOutputFile, bom, sizeof(bom), &dwWritten, NULL);
+
+	   TCHAR* t =  _T("~JR");
+
+	   DWORD nNumberOfBytes = sizeof(TCHAR) * _tcslen(t);
+
+	   bSuccess = WriteFile(hOutputFile, t, nNumberOfBytes, &dwWritten, NULL);
+
+	   CloseHandle(hOutputFile) ;
+	//
+	   ShellExecute(NULL, _T("print"), _T("Reboot.txt"), NULL, NULL, SW_SHOW);
+
+	    strLog.Format(L"[RebootZebraByUSB] NumOfImgInMemory: %s", m_strNumOfImgInMemory);
+		GetLog()->Debug(strLog.GetBuffer());
+
+		if(_wtoi(m_strNumOfImgInMemory) > m_nMaxImgCnt)
+		{
+			RecordMaxImgCount(m_strNumOfImgInMemory);
+		}
+
+		RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
+	}
 }

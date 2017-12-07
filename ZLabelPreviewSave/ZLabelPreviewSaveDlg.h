@@ -201,6 +201,10 @@ public:
 	void LogPassZPL(CString str);
 	//2017-09-28
 	CString m_strImageFileFormat;
+
+	//2017-12-04 Ãß°¡
+	void RebootZebraByUSB();
+
 };
 
 
