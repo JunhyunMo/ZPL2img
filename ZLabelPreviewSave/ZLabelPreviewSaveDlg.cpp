@@ -1548,6 +1548,7 @@ void CZLabelPreviewSaveDlg::ProcessStart()
 	m_strPrevZPL = m_strZPL;
 
 	//m_strZPL.Replace(L"\\",L"\\\\"); - 2017-01-16 막음. DMS에서 ^FX-주석-제거
+	m_strZPL.Replace(L"^POI",L""); //v2.52 2018-04-20 역상이미지 방지
 	UpdateData(FALSE); //
 
 	//HRESULT hResult = ZPL2Img();
