@@ -198,11 +198,45 @@ void CConnectSocket2::OnReceive(int nErrorCode)
 			pMain->MBCS2Unicode(chBuff,Buff);
 			strLog.Format(_T("[RCV-ZEBRA] %s"),Buff);
 			pMain->DisplayLogSocket(strLog);
-			pMain->ParseZEBRAResponse(Buff);
+			pMain->ParseZEBRAResponse(Buff); 
 			pMain->Disconnect2ZEBRA(); //2017-07-14
-			
 		}
 	}
 	
 	CSocket::OnReceive(nErrorCode);
+}
+//2018-08-23 v2.7 - DUAL ZEBRA IP
+void CZLabelPreviewSaveDlg::ChangeAndSaveZebraIP(CString strCurrentIP)
+{
+	CString strPrevZEBRA_IP = strCurrentIP;
+
+	m_IExplorer.Stop();
+	if(strPrevZEBRA_IP == m_strPrintServer01_IP) {  //To-Do ZEBRA IP (1)
+		m_strZEBRA_IP = m_strPrintServer02_IP;
+	}
+	else if(strPrevZEBRA_IP == m_strPrintServer02_IP) { //ZEBRA IP (2)
+		m_strZEBRA_IP = m_strPrintServer01_IP;
+	}
+
+	CString strLog;
+
+	//AppMonitor.ini 기록
+	TCHAR szCurrentPath[1024];
+	GetCurrentDirectory(1024, szCurrentPath);
+	CString strPath = szCurrentPath;
+	CString strExePath = GetExecuteDirectory();
+	strPath.Format(L"%s\\ZPL2img.ini", strExePath);
+	
+	if(!PathFileExists(strPath)) 
+	{
+		strLog = L"[Error] ZPL2img.ini 파일이 존재하지 않습니다.";
+		GetLog()->Debug(strLog.GetBuffer());
+		return;
+	}
+
+	WritePrivateProfileString(L"ZEBRA",L"ZEBRA_IP", m_strZEBRA_IP, strPath);
+
+	//Log 
+	strLog.Format(L"(%s->%s) ZEBRA IP Changed", strPrevZEBRA_IP, m_strZEBRA_IP);
+	GetLog()->Debug(strLog.GetBuffer());
 }

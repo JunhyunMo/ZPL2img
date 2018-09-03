@@ -204,6 +204,10 @@ public:
 
 	//2017-12-04 Ãß°¡
 	void RebootZebraByUSB();
+	//2018-08-23
+	void RebootZebraByTCPIP(CString strCase);
+	void ChangeAndSaveZebraIP(CString strCurrentIP);
+	CString m_strPrintServer01_IP, m_strPrintServer02_IP;
 
 };
 

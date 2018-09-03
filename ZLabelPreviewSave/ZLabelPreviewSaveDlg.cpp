@@ -1496,6 +1496,13 @@ BOOL CZLabelPreviewSaveDlg::ReadConfigFile() // \\ZPL2img.INI
 	ZeroMemory(szValue, 0xFF);
 	if (GetPrivateProfileString(L"ZEBRA", L"IMAGE_FILE_FORMAT", L"", szValue, sizeof(szValue), strPath))
 		m_strImageFileFormat = szValue;
+	//2018-08-25 v2.7 듀얼 이미지서버
+	ZeroMemory(szValue, 0xFF);
+	if (GetPrivateProfileString(L"ZEBRA", L"PRINT_SERVER01_IP", L"", szValue, sizeof(szValue), strPath))
+		m_strPrintServer01_IP = szValue;
+	ZeroMemory(szValue, 0xFF);
+	if (GetPrivateProfileString(L"ZEBRA", L"PRINT_SERVER02_IP", L"", szValue, sizeof(szValue), strPath))
+		m_strPrintServer02_IP = szValue;
 
 	return TRUE;
 }
@@ -1610,7 +1617,10 @@ void CZLabelPreviewSaveDlg::TitleChangeExplorer(LPCTSTR Text)
 		AddLogEvent(Text);
 
 		//2017-12-04 변경
-		RebootZebraByUSB();
+		//RebootZebraByUSB();
+		RebootZebraByTCPIP(L"TitleChangeExplorer ERROR"); //2018-08-23 v2.7
+		ChangeAndSaveZebraIP(m_strZEBRA_IP); //2018-08-25
+	//
 		PostQuitMessage(0);
 	}
 }
@@ -1660,7 +1670,10 @@ void CZLabelPreviewSaveDlg::StatusTextChangeExplorer(LPCTSTR Text)
 		AddLogEvent(Text);
 		
 		//2017-12-04 변경
-		RebootZebraByUSB();
+		//RebootZebraByUSB();
+		RebootZebraByTCPIP(L"StatusTextChangeExplorer ERROR"); //2018-08-23 v2.7
+		ChangeAndSaveZebraIP(m_strZEBRA_IP); //2018-08-25
+		//
 		PostQuitMessage(0);
 		
 	}
@@ -1709,6 +1722,10 @@ void CZLabelPreviewSaveDlg::OnTimer(UINT_PTR nIDEvent)
 			GetLog()->Debug(strLog.GetBuffer());
 		
 			RecordZebraWaiting(TRUE); //2017-08-09 Zebra 연결불안정 대기
+			//2018-08-25
+			RebootZebraByTCPIP(L"TIMER_TIMEOUT");
+			ChangeAndSaveZebraIP(m_strZEBRA_IP);
+			//
 		    PostQuitMessage(0); 
 		}
 		else 
@@ -1769,7 +1786,10 @@ void CZLabelPreviewSaveDlg::SaveImage()
 	if(!m_Image.Create(m_Rect.right, m_Rect.bottom, 32)) 
 		return;
 	
-	hDC = m_Image.GetDC();     
+	hDC = m_Image.GetDC();  
+//for test
+//CDC* pDC = CDC::FromHandle(hDC);
+//PrintWindow(pDC, PW_CLIENTONLY);
 	BitBlt(hDC, 0, 0, m_Rect.right, m_Rect.bottom, DeskTopDC.m_hDC, 0, 0, SRCCOPY);
 	//BitBlt(hDC, 0, 400, m_Rect.right, m_Rect.bottom-400, DeskTopDC.m_hDC, 0, 400, SRCCOPY);
 
@@ -1911,7 +1931,6 @@ void CZLabelPreviewSaveDlg::Connect2DMS(CString strIP,UINT nPort)
 
 		//2017-01-18
 		SendToDMS(L"TIME"); //TIMESYNC
-		//Retry(); //한번 시도 - 누락이미지 확인 //2017-08-14 막음
 	}
 }
 
@@ -1977,7 +1996,10 @@ void CZLabelPreviewSaveDlg::ResetByDMS(CString strZPL)
 	CString strLog;
 	strLog.Format(L"[ResetByDMS-Emergency][LAST ZPL] %s", strZPL); //2017-01-25
 	GetLog()->Debug(strLog.GetBuffer());	
-
+	//2018-08-25
+	RebootZebraByTCPIP(L"ResetByDMS");
+	ChangeAndSaveZebraIP(m_strZEBRA_IP);
+	//
 	PostQuitMessage(0);//2017-07-11
 }
 
@@ -2145,6 +2167,10 @@ BOOL CZLabelPreviewSaveDlg::Connect2ZEBRA(CString strZebraIP, UINT nPort) // TCP
 		strLog = "[ERROR] - m_Socket2.Create() for ZEBRA connect";
 		GetLog()->Debug(strLog.GetBuffer());
 		m_bZebraConnect = FALSE; //2017-07-20
+		//2018-08-25
+		RebootZebraByTCPIP(L"m_Socket2.Create() Fail");
+		ChangeAndSaveZebraIP(m_strZEBRA_IP);
+		//
 		PostQuitMessage(0);//2017-07-11
 	}
 	//
@@ -2162,7 +2188,12 @@ BOOL CZLabelPreviewSaveDlg::Connect2ZEBRA(CString strZebraIP, UINT nPort) // TCP
 		//m_bZebraConnect = FALSE; //2017-07-20
 		//RecordZebraWaiting(TRUE); //2017-07-24 Zebra 연결불안정 대기
 		//PostQuitMessage(0);  //2017-07-11  
-		Initialize(); //2017-08-09 v2.43
+		//Initialize(); //2017-08-09 v2.43
+		//2018-08-25
+		RebootZebraByTCPIP(L"m_Socket2.Connect() Fail");
+		ChangeAndSaveZebraIP(m_strZEBRA_IP);
+		PostQuitMessage(0);
+		//
 //
 		return FALSE;
 	}
@@ -2329,6 +2360,7 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 					{
 						RecordMaxImgCount(m_strNumOfImgInMemory);
 					}
+					ChangeAndSaveZebraIP(m_strZEBRA_IP); //2018-08-25
 					PostQuitMessage(0);
 					break;
 				}
@@ -2357,7 +2389,7 @@ void CZLabelPreviewSaveDlg::ParseZEBRAResponse(TCHAR* tch) //2016-10-25 ~HS comm
 					GetLog()->Debug(strLog.GetBuffer());
 
 					RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
-					
+					ChangeAndSaveZebraIP(m_strZEBRA_IP); //2018-08-25
 					PostQuitMessage(0);
 					break;
 				}
@@ -2411,7 +2443,11 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtEmergency() // 2016-10-26
 	GetLog()->Debug(strLog.GetBuffer());
 
 	//2017-12-04 변경
-	RebootZebraByUSB();
+	//RebootZebraByUSB(); //2018-08-23 v2.7
+	//2018-08-25
+	RebootZebraByTCPIP(L"OnBnClickedBtEmergency()");
+	ChangeAndSaveZebraIP(m_strZEBRA_IP);
+	//
 	PostQuitMessage(0);
 }
 
@@ -2434,6 +2470,7 @@ CString CZLabelPreviewSaveDlg::GetMessageForHResult(HRESULT hr)
 	
 	return strErrMsg;
 }
+
 //prototype code - 
 void CZLabelPreviewSaveDlg::OnBnClickedBtConfig()
 {
@@ -2468,7 +2505,6 @@ void CZLabelPreviewSaveDlg::TimeSync(CString str)
 	CString strLog;
 	strLog.Format(L"Time Sync with DMS [%s]", strDateTime);
 	GetLog()->Debug(strLog.GetBuffer());
-	
 }
 
 void CZLabelPreviewSaveDlg::OnBnClickedBtTimesync() //2017-01-12 TimeSync with DMS - Make It Simple!
@@ -2490,7 +2526,11 @@ void CZLabelPreviewSaveDlg::OnBnClickedBtRebootZebra()
 {
 	CString strLog = L"OnBnClickedBtRebootZebra()";
 	GetLog()->Debug(strLog.GetBuffer());
-	RebootZebraByUSB();
+	//RebootZebraByUSB();
+	//2018-08-25
+	RebootZebraByTCPIP(L"OnBnClickedBtRebootZebra");
+	ChangeAndSaveZebraIP(m_strZEBRA_IP); 
+	//
 	PostQuitMessage(0);
 }
 
@@ -2520,6 +2560,7 @@ void CZLabelPreviewSaveDlg::Initialize()
 				{
 					RecordMaxImgCount(m_strNumOfImgInMemory);
 				}
+				ChangeAndSaveZebraIP(m_strZEBRA_IP); //2018-08-25
 				PostQuitMessage(0); //2017-07-12
 				break;
 			}
@@ -2531,8 +2572,9 @@ void CZLabelPreviewSaveDlg::Initialize()
 		//2017-08-11
 		strLog  = L"[FAIL] INITIALIZE() (m_bDMSconnected != TRUE || m_bZebraConnect != TRUE)"; 
 		GetLog()->Debug(strLog.GetBuffer());
-		//2017-12-05 MJH To-Do
+		//2017-12-05
 		RecordZebraWaiting(TRUE);
+		ChangeAndSaveZebraIP(m_strZEBRA_IP); //2018-08-25
 		PostQuitMessage(0); 
 	}
 }
@@ -2571,7 +2613,7 @@ void CZLabelPreviewSaveDlg::OnNcDestroy()
 	RecordExitTime();
 }
 
-//2017-12-04 추가
+//2017-12-04 추가 - 사용안함(2018-08-27 ~ )
 void CZLabelPreviewSaveDlg::RebootZebraByUSB()
 {
 	CString strLog;
@@ -2615,5 +2657,42 @@ void CZLabelPreviewSaveDlg::RebootZebraByUSB()
 		}
 
 		RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
+	}
+}
+
+//2018-08-23 추가 
+void CZLabelPreviewSaveDlg::RebootZebraByTCPIP(CString strCase)
+{
+	CString strLog = L"";
+
+	if(m_bDMSconnected == TRUE && m_bZebraConnect == TRUE) 
+	{
+		int nRet = SendToDMS(L"REBOOT");
+		if(nRet > 0 )
+		{
+			Disconnect2DMS();
+			m_bPauseMonitoringZEBRA = TRUE;
+
+			for (int i=0; i < 5; i++) //2016-11-01  재부팅 확실하게 5번 시도
+			{
+				nRet = SendToZEBRA(L"~JR"); // ~JR : Power On Reset
+		
+				if(nRet == 4) //~JR(null)  //2016-11-02
+				{
+					strLog.Format(L"[RebootZebraByTCPIP] - %s", strCase);
+					GetLog()->Debug(strLog.GetBuffer());
+
+					RecordZebraRecovery(FALSE); //TRUE: 복구완료(제브라재부팅,앱실행), FALSE: 복구진행중
+					//2017-01-25
+					if(_wtoi(m_strNumOfImgInMemory) > m_nMaxImgCnt)
+					{
+						RecordMaxImgCount(m_strNumOfImgInMemory);
+					}
+					//PostQuitMessage(0);
+					break;
+				}
+				Sleep(50);
+			}	
+		}
 	}
 }
